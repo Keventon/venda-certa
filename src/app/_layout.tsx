@@ -11,6 +11,8 @@ import {
 } from "@expo-google-fonts/inter";
 import { View } from "react-native";
 
+import "@/global.css";
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Inter_300Light,
@@ -22,7 +24,7 @@ export default function RootLayout() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View className="flex-1 items-center justify-center bg-background">
         <Loading />
       </View>
     );
