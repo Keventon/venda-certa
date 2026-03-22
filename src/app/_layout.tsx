@@ -1,6 +1,7 @@
-import { Slot } from "expo-router";
+import { Tabs } from "expo-router";
 
 import { Loading } from "@/components/Loading";
+import { TabBar } from "@/components/TabBar";
 import {
   Inter_300Light,
   Inter_400Regular,
@@ -30,5 +31,12 @@ export default function RootLayout() {
     );
   }
 
-  return <Slot />;
+  return (
+    <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <TabBar {...props} />}>
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="incomes" />
+      <Tabs.Screen name="expenses" />
+      <Tabs.Screen name="history" />
+    </Tabs>
+  );
 }
