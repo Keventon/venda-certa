@@ -31,6 +31,7 @@ export function InputField({
         <TextInput
           {...props}
           selectionColor={colors.tertiary}
+          cursorColor={colors.tertiary}
           className={clsx("flex-1 font-inter-regular text-base text-text")}
           multiline={multiline}
           placeholderTextColor="#7A8391"

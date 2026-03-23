@@ -2,8 +2,17 @@ import { CategorySelector } from "@/components/CategorySelector";
 import { InputField } from "@/components/InputField";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { colors } from "@/styles/colors";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 const EXPENSE_CATEGORIES = [
   { label: "Ingredientes", value: "ingredients" },
@@ -14,10 +23,30 @@ const EXPENSE_CATEGORIES = [
   { label: "Outros", value: "other" },
 ];
 
+function formatCurrencyInput(value: string) {
+  const digits = value.replace(/\D/g, "");
+
+  if (!digits) {
+    return "";
+  }
+
+  const amount = Number(digits) / 100;
+
+  return amount.toLocaleString("pt-BR", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  });
+}
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString("pt-BR");
+}
+
 export default function Expenses() {
   const [amount, setAmount] = useState("");
   const [vendor, setVendor] = useState("");
-  const [transactionDate, setTransactionDate] = useState("");
+  const [transactionDate, setTransactionDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [category, setCategory] = useState("ingredients");
   const [notes, setNotes] = useState("");
 
@@ -38,10 +67,11 @@ export default function Expenses() {
           </Text>
           <TextInput
             className="flex-1 font-inter-bold text-3xl text-text"
-            keyboardType="decimal-pad"
-            onChangeText={setAmount}
+            keyboardType="number-pad"
+            onChangeText={(value) => setAmount(formatCurrencyInput(value))}
             placeholder="0,00"
             selectionColor={colors.tertiary}
+            cursorColor={colors.tertiary}
             placeholderTextColor="rgba(26, 28, 25, 0.14)"
             value={amount}
           />
@@ -56,13 +86,58 @@ export default function Expenses() {
           value={vendor}
         />
 
-        <InputField
-          label="Data da transação"
-          onChangeText={setTransactionDate}
-          placeholder="mm/dd/yyyy"
-          rightIconName="calendar-blank-outline"
-          value={transactionDate}
-        />
+        <View className="gap-2">
+          <Text className="font-inter-medium text-sm text-text/75">
+            Data da transação
+          </Text>
+
+          <Pressable
+            className="h-14 flex-row items-center rounded-lg border border-text/10 bg-white px-4"
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text className="flex-1 font-inter-regular text-base text-text">
+              {formatDate(transactionDate)}
+            </Text>
+
+            <MaterialCommunityIcons
+              color="#5C655F"
+              name="calendar-blank-outline"
+              size={22}
+            />
+          </Pressable>
+
+          {showDatePicker ? (
+            <View className="overflow-hidden rounded-lg border border-text/10 bg-white px-2 py-1">
+              <DateTimePicker
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                mode="date"
+                onChange={(event, selectedDate) => {
+                  if (Platform.OS === "android") {
+                    setShowDatePicker(false);
+                  }
+
+                  if (event.type === "dismissed" || !selectedDate) {
+                    return;
+                  }
+
+                  setTransactionDate(selectedDate);
+                }}
+                value={transactionDate}
+              />
+
+              {Platform.OS === "ios" ? (
+                <Pressable
+                  className="items-end px-3 pb-2"
+                  onPress={() => setShowDatePicker(false)}
+                >
+                  <Text className="font-inter-medium text-sm text-primary">
+                    Concluir
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
+        </View>
 
         <CategorySelector
           label="Categoria de despesa"
