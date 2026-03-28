@@ -1,25 +1,15 @@
 import { CategorySelector } from "@/components/CategorySelector";
+import { DatePickerField } from "@/components/DatePickerField";
 import { InputField } from "@/components/InputField";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { colors } from "@/styles/colors";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 
 const EXPENSE_CATEGORIES = [
   { label: "Ingredientes", value: "ingredients" },
   { label: "Embalagens", value: "packaging" },
-  { label: "Logistica", value: "logistics" },
-  { label: "Energia", value: "energy" },
-  { label: "Equipe", value: "team" },
+  { label: "Logística", value: "logistics" },
   { label: "Outros", value: "other" },
 ];
 
@@ -38,15 +28,10 @@ function formatCurrencyInput(value: string) {
   });
 }
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString("pt-BR");
-}
-
 export default function Expenses() {
   const [amount, setAmount] = useState("");
   const [vendor, setVendor] = useState("");
   const [transactionDate, setTransactionDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [category, setCategory] = useState("ingredients");
   const [notes, setNotes] = useState("");
 
@@ -61,18 +46,17 @@ export default function Expenses() {
           Valor total
         </Text>
 
-        <View className="mt-6 flex-row items-end gap-2">
-          <Text className="pb-1 font-inter-semibold text-2xl text-tertiary">
-            R$
-          </Text>
+        <View className="mt-6 flex-row items-center gap-2">
+          <Text className="font-inter-semibold text-2xl text-tertiary">R$</Text>
           <TextInput
-            className="flex-1 font-inter-bold text-3xl text-text"
+            className="flex-1 py-0 font-inter-medium text-2xl text-text"
             keyboardType="number-pad"
             onChangeText={(value) => setAmount(formatCurrencyInput(value))}
             placeholder="0,00"
             selectionColor={colors.tertiary}
             cursorColor={colors.tertiary}
             placeholderTextColor="rgba(26, 28, 25, 0.14)"
+            style={{ height: 40, paddingVertical: 0 }}
             value={amount}
           />
         </View>
@@ -82,62 +66,18 @@ export default function Expenses() {
         <InputField
           label="Nome da despesa"
           onChangeText={setVendor}
-          placeholder="ex: Distribuidora de Frutos do Mar"
+          selectionColor={colors.tertiary}
+          cursorColor={colors.tertiary}
+          placeholder="Ex: Distribuidora de Frutos do Mar"
           value={vendor}
         />
 
-        <View className="gap-2">
-          <Text className="font-inter-medium text-sm text-text/75">
-            Data da transação
-          </Text>
-
-          <Pressable
-            className="h-14 flex-row items-center rounded-lg border border-text/10 bg-white px-4"
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text className="flex-1 font-inter-regular text-base text-text">
-              {formatDate(transactionDate)}
-            </Text>
-
-            <MaterialCommunityIcons
-              color="#5C655F"
-              name="calendar-blank-outline"
-              size={22}
-            />
-          </Pressable>
-
-          {showDatePicker ? (
-            <View className="overflow-hidden rounded-lg border border-text/10 bg-white px-2 py-1">
-              <DateTimePicker
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                mode="date"
-                onChange={(event, selectedDate) => {
-                  if (Platform.OS === "android") {
-                    setShowDatePicker(false);
-                  }
-
-                  if (event.type === "dismissed" || !selectedDate) {
-                    return;
-                  }
-
-                  setTransactionDate(selectedDate);
-                }}
-                value={transactionDate}
-              />
-
-              {Platform.OS === "ios" ? (
-                <Pressable
-                  className="items-end px-3 pb-2"
-                  onPress={() => setShowDatePicker(false)}
-                >
-                  <Text className="font-inter-medium text-sm text-primary">
-                    Concluir
-                  </Text>
-                </Pressable>
-              ) : null}
-            </View>
-          ) : null}
-        </View>
+        <DatePickerField
+          accentColor={colors.primary}
+          label="Data da transação"
+          onChange={setTransactionDate}
+          value={transactionDate}
+        />
 
         <CategorySelector
           label="Categoria de despesa"
@@ -149,6 +89,8 @@ export default function Expenses() {
         <InputField
           label="Notas / Descrição"
           multiline
+          selectionColor={colors.tertiary}
+          cursorColor={colors.tertiary}
           onChangeText={setNotes}
           placeholder="Forneça detalhes sobre este gasto..."
           value={notes}

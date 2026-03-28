@@ -61,7 +61,7 @@ export function TransactionCard({
       <View className="flex-row items-center gap-3">
         <View
           className={clsx(
-            "h-14 w-14 items-center justify-center rounded-[18px]",
+            "h-14 w-14 items-center justify-center rounded-2xl",
             palette.iconBadgeClassName,
           )}
         >
@@ -74,13 +74,13 @@ export function TransactionCard({
 
         <View className="flex-1">
           <View className="flex-row items-start justify-between gap-3">
-            <Text className="flex-1 font-inter-semibold text-[16px] leading-[24px] text-text">
+            <Text className="flex-1 font-inter-semibold text-sm leading-[24px] text-text">
               {title}
             </Text>
 
             <Text
               className={clsx(
-                "pt-0.5 font-inter-semibold text-[14px]",
+                "pt-0.5 font-inter-semibold text-sm",
                 palette.amountClassName,
               )}
             >

@@ -60,7 +60,7 @@ export function MetricCard({
             {title}
           </Text>
 
-          <Text className="mt-2 font-inter-bold text-2xl text-text">
+          <Text className="mt-2 font-inter-bold text-xl text-text">
             {amount}
           </Text>
         </View>
@@ -82,7 +82,7 @@ export function MetricCard({
       <View className="mt-6">
         <Text
           className={clsx(
-            "font-inter-regular text-[13px] uppercase",
+            "font-inter-regular text-sm uppercase",
             palette.changeClassName,
           )}
         >

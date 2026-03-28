@@ -21,7 +21,7 @@ export function CategorySelector({
 }: CategorySelectorProps) {
   return (
     <View className="gap-2">
-      <Text className="font-inter-medium text-base text-text/75">{label}</Text>
+      <Text className="font-inter-regular text-sm text-text/75">{label}</Text>
 
       <View className="flex-row flex-wrap gap-3">
         {options.map((option) => {
@@ -31,17 +31,17 @@ export function CategorySelector({
             <Pressable
               key={option.value}
               className={clsx(
-                "rounded-lg border border-text/10 px-4 py-3",
-                isSelected
-                  ? "border-primary bg-primary"
-                  : "border-black/8 bg-white",
+                "rounded-lg px-4 py-3",
+                isSelected ? "bg-primary" : "bg-white",
               )}
               onPress={() => onChange(option.value)}
             >
               <Text
                 className={clsx(
-                  "font-inter-medium text-[14px]",
-                  isSelected ? "text-neutral" : "text-text/75",
+                  "font-inter-regular text-sm",
+                  isSelected
+                    ? "text-neutral font-inter-semibold"
+                    : "text-text/75",
                 )}
               >
                 {option.label}

@@ -80,10 +80,10 @@ export function TabBar({ descriptors, navigation, state }: BottomTabBarProps) {
               className="flex-1 items-center"
             >
               <View
-                className={`items-center rounded-xl px-3 py-2 ${
+                className={`items-center overflow-hidden rounded-xl px-3 py-2 ${
                   isFocused ? "bg-primary" : "bg-transparent"
                 }`}
-                style={{ minWidth: 82 }}
+                style={{ borderRadius: 14, minWidth: 82 }}
               >
                 <MaterialCommunityIcons
                   color={isFocused ? colors.neutral : "#4F5A54"}

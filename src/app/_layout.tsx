@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 import { Loading } from "@/components/Loading";
 import { TabBar } from "@/components/TabBar";
@@ -32,11 +33,17 @@ export default function RootLayout() {
   }
 
   return (
-    <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <TabBar {...props} />}>
-      <Tabs.Screen name="index" />
-      <Tabs.Screen name="incomes" />
-      <Tabs.Screen name="expenses" />
-      <Tabs.Screen name="history" />
-    </Tabs>
+    <>
+      <StatusBar style="dark" />
+      <Tabs
+        screenOptions={{ headerShown: false }}
+        tabBar={(props) => <TabBar {...props} />}
+      >
+        <Tabs.Screen name="index" />
+        <Tabs.Screen name="incomes" />
+        <Tabs.Screen name="expenses" />
+        <Tabs.Screen name="history" />
+      </Tabs>
+    </>
   );
 }

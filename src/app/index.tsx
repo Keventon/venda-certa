@@ -28,11 +28,11 @@ export default function Index() {
           }}
         />
 
-        <Text className="font-inter-regular text-base uppercase text-neutral/80">
-          Lucro Disponível
+        <Text className="font-inter-regular text-sm uppercase text-neutral/80">
+          Saldo em caixa
         </Text>
 
-        <Text className="mt-5 font-inter-bold text-3xl leading-none text-neutral">
+        <Text className="mt-5 font-inter-bold text-xl leading-none text-neutral">
           R$ 142.850,42
         </Text>
       </View>
@@ -41,7 +41,7 @@ export default function Index() {
         <MetricCard
           amount="R$ 84,200.00"
           change="12% a mais comparado ao mês anterior"
-          title="Receita mensal"
+          title="Entrada mensal"
           variant="income"
         />
 
@@ -54,7 +54,7 @@ export default function Index() {
       </View>
 
       <View className="mt-6">
-        <Text className="text-text text-base font-inter-medium">
+        <Text className="text-text text-sm font-inter-medium">
           Transações recentes
         </Text>
       </View>
