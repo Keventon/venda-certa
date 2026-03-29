@@ -1,4 +1,6 @@
+import { DATABASE_NAME, migrateDatabaseIfNeeded } from "@/database";
 import { Tabs } from "expo-router";
+import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 
 import { Loading } from "@/components/Loading";
@@ -35,15 +37,20 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style="dark" />
-      <Tabs
-        screenOptions={{ headerShown: false }}
-        tabBar={(props) => <TabBar {...props} />}
+      <SQLiteProvider
+        databaseName={DATABASE_NAME}
+        onInit={migrateDatabaseIfNeeded}
       >
-        <Tabs.Screen name="index" />
-        <Tabs.Screen name="incomes" />
-        <Tabs.Screen name="expenses" />
-        <Tabs.Screen name="history" />
-      </Tabs>
+        <Tabs
+          screenOptions={{ headerShown: false }}
+          tabBar={(props) => <TabBar {...props} />}
+        >
+          <Tabs.Screen name="index" />
+          <Tabs.Screen name="incomes" />
+          <Tabs.Screen name="expenses" />
+          <Tabs.Screen name="history" />
+        </Tabs>
+      </SQLiteProvider>
     </>
   );
 }

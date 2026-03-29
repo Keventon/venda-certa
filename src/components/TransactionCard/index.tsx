@@ -1,12 +1,14 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import type {
+  TransactionCategory,
+  TransactionVariant,
+} from "@/types/transactions";
 import clsx from "clsx";
 import { Text, View } from "react-native";
 
-type TransactionVariant = "income" | "expense";
-
 type TransactionCardProps = {
   amount: string;
-  category: string;
+  category: TransactionCategory;
   description: string;
   title: string;
   typeLabel: string;
@@ -41,7 +43,16 @@ const CATEGORY_ICONS: Record<
   React.ComponentProps<typeof MaterialCommunityIcons>["name"]
 > = {
   bills: "briefcase-check-outline",
+  "counter-sale": "storefront-outline",
+  delivery: "bike-fast",
+  event: "calendar-star",
   food: "silverware-fork-knife",
+  ingredients: "food-apple-outline",
+  logistics: "truck-delivery-outline",
+  other: "dots-grid",
+  packaging: "package-variant-closed",
+  sales: "cash-register",
+  subscription: "calendar-star",
   utilities: "lightning-bolt-outline",
 };
 

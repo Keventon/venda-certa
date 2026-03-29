@@ -2,38 +2,88 @@ import { CategorySelector } from "@/components/CategorySelector";
 import { DatePickerField } from "@/components/DatePickerField";
 import { InputField } from "@/components/InputField";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { createTransaction } from "@/database";
 import { colors } from "@/styles/colors";
+import type { TransactionCategory } from "@/types/transactions";
+import {
+  formatCurrencyInput,
+  parseCurrencyInputToCents,
+} from "@/utils/currency";
+import { useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, ScrollView, Text, TextInput, View } from "react-native";
 
-const INCOME_CATEGORIES = [
+const INCOME_CATEGORIES: Array<{
+  label: string;
+  value: TransactionCategory;
+}> = [
   { label: "Venda balcão", value: "counter-sale" },
   { label: "Delivery", value: "delivery" },
   { label: "Evento", value: "event" },
   { label: "Outros", value: "other" },
 ];
 
-function formatCurrencyInput(value: string) {
-  const digits = value.replace(/\D/g, "");
-
-  if (!digits) {
-    return "";
-  }
-
-  const amount = Number(digits) / 100;
-
-  return amount.toLocaleString("pt-BR", {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  });
-}
+const DEFAULT_INCOME_CATEGORY: TransactionCategory = "counter-sale";
 
 export default function Incomes() {
+  const db = useSQLiteContext();
+  const router = useRouter();
   const [amount, setAmount] = useState("");
   const [source, setSource] = useState("");
   const [transactionDate, setTransactionDate] = useState(new Date());
-  const [category, setCategory] = useState("counter-sale");
+  const [category, setCategory] = useState<TransactionCategory>(
+    DEFAULT_INCOME_CATEGORY,
+  );
+  const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState("");
+
+  const isFormValid = amount.length > 0 && source.trim().length > 0;
+
+  function resetForm() {
+    setAmount("");
+    setSource("");
+    setTransactionDate(new Date());
+    setCategory(DEFAULT_INCOME_CATEGORY);
+    setNotes("");
+  }
+
+  async function handleSaveIncome() {
+    if (!isFormValid || isSaving) {
+      return;
+    }
+
+    const selectedCategory = INCOME_CATEGORIES.find(
+      (option) => option.value === category,
+    );
+
+    setIsSaving(true);
+
+    try {
+      await createTransaction(db, {
+        amountInCents: parseCurrencyInputToCents(amount),
+        category,
+        counterparty: null,
+        notes: notes.trim() || null,
+        occurredAt: transactionDate.toISOString(),
+        title: source.trim(),
+        typeLabel: selectedCategory?.label ?? "Receita",
+        variant: "income",
+      });
+
+      resetForm();
+      Alert.alert(
+        "Entrada salva",
+        "A movimentação foi registrada no histórico.",
+      );
+      router.push("/history");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erro ao salvar", "Não foi possível salvar a entrada agora.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <ScrollView
@@ -47,9 +97,7 @@ export default function Incomes() {
         </Text>
 
         <View className="mt-6 flex-row items-center gap-2">
-          <Text className="font-inter-semibold text-2xl text-primary">
-            R$
-          </Text>
+          <Text className="font-inter-semibold text-2xl text-primary">R$</Text>
           <TextInput
             className="flex-1 py-0 font-inter-medium text-2xl text-text"
             cursorColor={colors.primary}
@@ -83,7 +131,7 @@ export default function Incomes() {
 
         <CategorySelector
           label="Categorias"
-          onChange={setCategory}
+          onChange={(value) => setCategory(value as TransactionCategory)}
           options={INCOME_CATEGORIES}
           value={category}
         />
@@ -100,7 +148,12 @@ export default function Incomes() {
       </View>
 
       <View className="mt-10">
-        <PrimaryButton label="Salvar Entrada" />
+        <PrimaryButton
+          disabled={!isFormValid}
+          isLoading={isSaving}
+          label="Salvar Entrada"
+          onPress={() => void handleSaveIncome()}
+        />
       </View>
     </ScrollView>
   );

@@ -1,39 +1,83 @@
+import { createTransaction } from "@/database";
 import { CategorySelector } from "@/components/CategorySelector";
 import { DatePickerField } from "@/components/DatePickerField";
 import { InputField } from "@/components/InputField";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { colors } from "@/styles/colors";
+import type { TransactionCategory } from "@/types/transactions";
+import { formatCurrencyInput, parseCurrencyInputToCents } from "@/utils/currency";
+import { useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, ScrollView, Text, TextInput, View } from "react-native";
 
-const EXPENSE_CATEGORIES = [
+const EXPENSE_CATEGORIES: Array<{
+  label: string;
+  value: TransactionCategory;
+}> = [
   { label: "Ingredientes", value: "ingredients" },
   { label: "Embalagens", value: "packaging" },
   { label: "Logística", value: "logistics" },
   { label: "Outros", value: "other" },
 ];
 
-function formatCurrencyInput(value: string) {
-  const digits = value.replace(/\D/g, "");
-
-  if (!digits) {
-    return "";
-  }
-
-  const amount = Number(digits) / 100;
-
-  return amount.toLocaleString("pt-BR", {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  });
-}
+const DEFAULT_EXPENSE_CATEGORY: TransactionCategory = "ingredients";
 
 export default function Expenses() {
+  const db = useSQLiteContext();
+  const router = useRouter();
   const [amount, setAmount] = useState("");
   const [vendor, setVendor] = useState("");
   const [transactionDate, setTransactionDate] = useState(new Date());
-  const [category, setCategory] = useState("ingredients");
+  const [category, setCategory] = useState<TransactionCategory>(
+    DEFAULT_EXPENSE_CATEGORY,
+  );
+  const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState("");
+
+  const isFormValid = amount.length > 0 && vendor.trim().length > 0;
+
+  function resetForm() {
+    setAmount("");
+    setVendor("");
+    setTransactionDate(new Date());
+    setCategory(DEFAULT_EXPENSE_CATEGORY);
+    setNotes("");
+  }
+
+  async function handleSaveExpense() {
+    if (!isFormValid || isSaving) {
+      return;
+    }
+
+    const selectedCategory = EXPENSE_CATEGORIES.find(
+      (option) => option.value === category,
+    );
+
+    setIsSaving(true);
+
+    try {
+      await createTransaction(db, {
+        amountInCents: -parseCurrencyInputToCents(amount),
+        category,
+        counterparty: null,
+        notes: notes.trim() || null,
+        occurredAt: transactionDate.toISOString(),
+        title: vendor.trim(),
+        typeLabel: selectedCategory?.label ?? "Despesa",
+        variant: "expense",
+      });
+
+      resetForm();
+      Alert.alert("Despesa salva", "A movimentação foi registrada no histórico.");
+      router.push("/history");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erro ao salvar", "Não foi possível salvar a despesa agora.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <ScrollView
@@ -81,7 +125,7 @@ export default function Expenses() {
 
         <CategorySelector
           label="Categoria de despesa"
-          onChange={setCategory}
+          onChange={(value) => setCategory(value as TransactionCategory)}
           options={EXPENSE_CATEGORIES}
           value={category}
         />
@@ -98,7 +142,12 @@ export default function Expenses() {
       </View>
 
       <View className="mt-10">
-        <PrimaryButton label="Salvar Despesa" />
+        <PrimaryButton
+          disabled={!isFormValid}
+          isLoading={isSaving}
+          label="Salvar Despesa"
+          onPress={() => void handleSaveExpense()}
+        />
       </View>
     </ScrollView>
   );

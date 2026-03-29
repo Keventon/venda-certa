@@ -1,9 +1,175 @@
 import Abstract from "@/assets/abstract.svg";
+import { getDashboardSummary } from "@/database";
+import { Loading } from "@/components/Loading";
 import { MetricCard } from "@/components/MetricCard";
 import { TransactionCard } from "@/components/TransactionCard";
-import { ScrollView, Text, View } from "react-native";
+import type { DashboardSummary, TransactionRecord } from "@/types/transactions";
+import {
+  formatCurrencyFromCents,
+  formatSignedCurrencyFromCents,
+} from "@/utils/currency";
+import { useIsFocused } from "@react-navigation/native";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
+import { Alert, ScrollView, Text, View } from "react-native";
+
+function formatMetricChange(
+  currentTotalInCents: number,
+  previousTotalInCents: number,
+  changePercent: number | null,
+) {
+  if (currentTotalInCents === 0 && previousTotalInCents === 0) {
+    return "Sem movimentações neste período";
+  }
+
+  if (changePercent === null) {
+    return "Sem base no mês anterior";
+  }
+
+  if (changePercent === 0) {
+    return "Mesmo valor do mês anterior";
+  }
+
+  return `${Math.abs(changePercent)}% ${
+    changePercent > 0 ? "acima" : "abaixo"
+  } do mês anterior`;
+}
+
+function formatRelativeTime(date: string) {
+  const now = new Date();
+  const occurredAt = new Date(date);
+
+  if (Number.isNaN(occurredAt.getTime())) {
+    return "Data inválida";
+  }
+
+  const diffInMinutes = Math.round(
+    (occurredAt.getTime() - now.getTime()) / (1000 * 60),
+  );
+  const absMinutes = Math.abs(diffInMinutes);
+
+  if (absMinutes < 60) {
+    if (absMinutes <= 1) {
+      return "agora";
+    }
+
+    return `há ${absMinutes} min`;
+  }
+
+  const diffInHours = Math.round(diffInMinutes / 60);
+  const absHours = Math.abs(diffInHours);
+
+  if (absHours < 24) {
+    return `há ${absHours} h`;
+  }
+
+  const diffInDays = Math.round(diffInHours / 24);
+
+  if (Math.abs(diffInDays) === 1) {
+    return "ontem";
+  }
+
+  if (Math.abs(diffInDays) < 7) {
+    return `há ${Math.abs(diffInDays)} dias`;
+  }
+
+  const monthLabels = [
+    "jan",
+    "fev",
+    "mar",
+    "abr",
+    "mai",
+    "jun",
+    "jul",
+    "ago",
+    "set",
+    "out",
+    "nov",
+    "dez",
+  ];
+
+  return `${String(occurredAt.getDate()).padStart(2, "0")} ${
+    monthLabels[occurredAt.getMonth()]
+  }`;
+}
+
+function formatTransactionDescription(transaction: TransactionRecord) {
+  const leadingText = transaction.counterparty ?? transaction.notes ?? "Sem detalhes";
+  const timeLabel = formatRelativeTime(transaction.occurredAt);
+
+  return `${leadingText} • ${timeLabel}`;
+}
 
 export default function Index() {
+  const db = useSQLiteContext();
+  const isFocused = useIsFocused();
+  const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isFocused) {
+      return;
+    }
+
+    let isActive = true;
+
+    async function loadDashboard() {
+      setIsLoading(true);
+
+      try {
+        const summary = await getDashboardSummary(db);
+
+        if (!isActive) {
+          return;
+        }
+
+        setDashboard(summary);
+      } catch (error) {
+        console.error(error);
+
+        if (isActive) {
+          Alert.alert(
+            "Erro ao carregar",
+            "Não foi possível carregar os dados da tela inicial.",
+          );
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadDashboard();
+
+    return () => {
+      isActive = false;
+    };
+  }, [db, isFocused]);
+
+  if (!dashboard && isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <Loading />
+      </View>
+    );
+  }
+
+  const summary = dashboard ?? {
+    balanceInCents: 0,
+    expense: {
+      changePercent: 0,
+      currentTotalInCents: 0,
+      previousTotalInCents: 0,
+    },
+    income: {
+      changePercent: 0,
+      currentTotalInCents: 0,
+      previousTotalInCents: 0,
+    },
+    recentTransactions: [],
+  };
+
   return (
     <ScrollView
       className="flex-1 bg-background"
@@ -33,21 +199,29 @@ export default function Index() {
         </Text>
 
         <Text className="mt-5 font-inter-bold text-xl leading-none text-neutral">
-          R$ 142.850,42
+          {formatCurrencyFromCents(summary.balanceInCents)}
         </Text>
       </View>
 
       <View className="mt-7 gap-4">
         <MetricCard
-          amount="R$ 84,200.00"
-          change="12% a mais comparado ao mês anterior"
+          amount={formatCurrencyFromCents(summary.income.currentTotalInCents)}
+          change={formatMetricChange(
+            summary.income.currentTotalInCents,
+            summary.income.previousTotalInCents,
+            summary.income.changePercent,
+          )}
           title="Entrada mensal"
           variant="income"
         />
 
         <MetricCard
-          amount="R$ 52,140.20"
-          change="12% a mais comparado ao mês anterior"
+          amount={formatCurrencyFromCents(summary.expense.currentTotalInCents)}
+          change={formatMetricChange(
+            summary.expense.currentTotalInCents,
+            summary.expense.previousTotalInCents,
+            summary.expense.changePercent,
+          )}
           title="Despesas mensais"
           variant="expense"
         />
@@ -60,32 +234,28 @@ export default function Index() {
       </View>
 
       <View className="mt-4 gap-4">
-        <TransactionCard
-          amount="-R$ 1.240,50"
-          category="bills"
-          description="Fornecedor: Farm-to-Table Hub • há 2 horas"
-          title="Suprimentos de Laticinios e Farinha Artesanal"
-          typeLabel="Estoque"
-          variant="expense"
-        />
-
-        <TransactionCard
-          amount="+R$ 8.421,15"
-          category="food"
-          description="Terminal de Cartao #4 • há 5 horas"
-          title="Pagamento do Jantar"
-          typeLabel="Receita"
-          variant="income"
-        />
-
-        <TransactionCard
-          amount="-R$ 642,00"
-          category="utilities"
-          description="Metropolitan Energy • Ontem"
-          title="Conta de Luz - Gas Natural"
-          typeLabel="Custo fixo"
-          variant="expense"
-        />
+        {summary.recentTransactions.length === 0 ? (
+          <View className="rounded-lg bg-white px-5 py-5">
+            <Text className="font-inter-semibold text-sm text-text">
+              Nenhuma transação cadastrada
+            </Text>
+            <Text className="mt-2 font-inter-regular text-sm leading-5 text-text/65">
+              As movimentações salvas em receita e despesa aparecerão aqui.
+            </Text>
+          </View>
+        ) : (
+          summary.recentTransactions.map((transaction) => (
+            <TransactionCard
+              key={transaction.id}
+              amount={formatSignedCurrencyFromCents(transaction.amountInCents)}
+              category={transaction.category}
+              description={formatTransactionDescription(transaction)}
+              title={transaction.title}
+              typeLabel={transaction.typeLabel}
+              variant={transaction.variant}
+            />
+          ))
+        )}
       </View>
     </ScrollView>
   );
