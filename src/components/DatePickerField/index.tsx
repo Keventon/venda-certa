@@ -99,6 +99,9 @@ export function DatePickerField({
               <Pressable
                 className="rounded-xl px-3 py-2"
                 onPress={() => setShowPicker(false)}
+                style={({ pressed }) => ({
+                  opacity: pressed ? 0.82 : 1,
+                })}
               >
                 <Text className="font-inter-medium text-sm text-text/70">
                   Cancelar
@@ -111,6 +114,9 @@ export function DatePickerField({
                   onChange(draftDate);
                   setShowPicker(false);
                 }}
+                style={({ pressed }) => ({
+                  opacity: pressed ? 0.82 : 1,
+                })}
               >
                 <Text className="font-inter-medium text-sm text-neutral">
                   Concluir

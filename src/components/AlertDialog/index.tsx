@@ -5,10 +5,20 @@ import {
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  Modal,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 type AlertDialogTone = "success" | "error" | "info";
 
@@ -68,6 +78,10 @@ const TONES: Record<
 
 export function AlertDialogProvider({ children }: { children: ReactNode }) {
   const [dialog, setDialog] = useState<AlertDialogState | null>(null);
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const cardOpacity = useRef(new Animated.Value(0)).current;
+  const cardScale = useRef(new Animated.Value(0.96)).current;
+  const cardTranslateY = useRef(new Animated.Value(20)).current;
 
   const showAlert = useCallback((options: AlertDialogOptions) => {
     setDialog({
@@ -76,25 +90,94 @@ export function AlertDialogProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  useEffect(() => {
+    if (!dialog) {
+      return;
+    }
+
+    overlayOpacity.setValue(0);
+    cardOpacity.setValue(0);
+    cardScale.setValue(0.96);
+    cardTranslateY.setValue(20);
+
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        duration: 220,
+        easing: Easing.out(Easing.quad),
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardOpacity, {
+        duration: 220,
+        easing: Easing.out(Easing.quad),
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+      Animated.spring(cardScale, {
+        bounciness: 6,
+        speed: 16,
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+      Animated.spring(cardTranslateY, {
+        bounciness: 4,
+        speed: 18,
+        toValue: 0,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [cardOpacity, cardScale, cardTranslateY, dialog, overlayOpacity]);
+
+  const dismissDialog = useCallback(
+    (callback?: () => void) => {
+      Animated.parallel([
+        Animated.timing(overlayOpacity, {
+          duration: 180,
+          easing: Easing.in(Easing.quad),
+          toValue: 0,
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardOpacity, {
+          duration: 160,
+          easing: Easing.in(Easing.quad),
+          toValue: 0,
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardScale, {
+          duration: 160,
+          easing: Easing.in(Easing.quad),
+          toValue: 0.98,
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardTranslateY, {
+          duration: 160,
+          easing: Easing.in(Easing.quad),
+          toValue: 12,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setDialog(null);
+        callback?.();
+      });
+    },
+    [cardOpacity, cardScale, cardTranslateY, overlayOpacity],
+  );
+
   const handleClose = useCallback(() => {
     if (!dialog) {
       return;
     }
 
-    const callback = dialog.onClose;
-    setDialog(null);
-    callback?.();
-  }, [dialog]);
+    dismissDialog(dialog.onClose);
+  }, [dialog, dismissDialog]);
 
   const handleConfirm = useCallback(() => {
     if (!dialog) {
       return;
     }
 
-    const callback = dialog.onConfirm;
-    setDialog(null);
-    callback?.();
-  }, [dialog]);
+    dismissDialog(dialog.onConfirm);
+  }, [dialog, dismissDialog]);
 
   const palette = dialog ? TONES[dialog.tone] : null;
   const contextValue = useMemo(() => ({ showAlert }), [showAlert]);
@@ -104,17 +187,30 @@ export function AlertDialogProvider({ children }: { children: ReactNode }) {
       {children}
 
       <Modal
-        animationType="fade"
+        animationType="none"
         onRequestClose={handleClose}
         statusBarTranslucent
         transparent
         visible={dialog !== null}
       >
-        <View className="flex-1 justify-center bg-black/35 px-6">
+        <View className="flex-1 justify-center px-6">
+          <Animated.View
+            className="absolute inset-0 bg-black/35"
+            style={{ opacity: overlayOpacity }}
+          />
           <Pressable className="absolute inset-0" onPress={handleClose} />
 
           {dialog && palette ? (
-            <View className="rounded-[28px] bg-background px-6 py-6">
+            <Animated.View
+              className="rounded-[28px] bg-background px-6 py-6"
+              style={{
+                opacity: cardOpacity,
+                transform: [
+                  { translateY: cardTranslateY },
+                  { scale: cardScale },
+                ],
+              }}
+            >
               <View className="items-start">
                 <View
                   className={clsx(
@@ -132,7 +228,7 @@ export function AlertDialogProvider({ children }: { children: ReactNode }) {
 
               <Text
                 className={clsx(
-                  "mt-5 font-inter-semibold text-[22px] leading-[28px]",
+                  "mt-5 font-inter-semibold text-lg",
                   palette.titleClassName,
                 )}
               >
@@ -145,18 +241,20 @@ export function AlertDialogProvider({ children }: { children: ReactNode }) {
 
               {dialog.onConfirm ? (
                 <View className="mt-7 flex-row gap-3">
-                  <Pressable
-                    className="h-14 flex-1 items-center justify-center rounded-[18px] bg-white"
+                  <TouchableOpacity
+                    activeOpacity={0.82}
+                    className="h-14 flex-1 items-center justify-center rounded-lg bg-white"
                     onPress={handleClose}
                   >
                     <Text className="font-inter-semibold text-base text-text/70">
                       {dialog.cancelLabel ?? "Cancelar"}
                     </Text>
-                  </Pressable>
+                  </TouchableOpacity>
 
-                  <Pressable
+                  <TouchableOpacity
+                    activeOpacity={0.82}
                     className={clsx(
-                      "h-14 flex-1 items-center justify-center rounded-[18px]",
+                      "h-14 flex-1 items-center justify-center rounded-lg",
                       palette.buttonClassName,
                     )}
                     onPress={handleConfirm}
@@ -164,12 +262,13 @@ export function AlertDialogProvider({ children }: { children: ReactNode }) {
                     <Text className="font-inter-semibold text-base text-neutral">
                       {dialog.confirmLabel ?? "Confirmar"}
                     </Text>
-                  </Pressable>
+                  </TouchableOpacity>
                 </View>
               ) : (
-                <Pressable
+                <TouchableOpacity
+                  activeOpacity={0.82}
                   className={clsx(
-                    "mt-7 h-14 items-center justify-center rounded-[18px]",
+                    "mt-7 h-14 items-center justify-center rounded-lg",
                     palette.buttonClassName,
                   )}
                   onPress={handleClose}
@@ -177,9 +276,9 @@ export function AlertDialogProvider({ children }: { children: ReactNode }) {
                   <Text className="font-inter-semibold text-base text-neutral">
                     {dialog.buttonLabel ?? "Entendi"}
                   </Text>
-                </Pressable>
+                </TouchableOpacity>
               )}
-            </View>
+            </Animated.View>
           ) : null}
         </View>
       </Modal>

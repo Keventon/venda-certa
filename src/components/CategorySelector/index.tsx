@@ -1,5 +1,6 @@
+import { usePressScale } from "@/hooks/usePressScale";
 import clsx from "clsx";
-import { Pressable, Text, View } from "react-native";
+import { Animated, Pressable, Text, View } from "react-native";
 
 type CategoryOption = {
   label: string;
@@ -12,6 +13,43 @@ type CategorySelectorProps = {
   options: CategoryOption[];
   value: string;
 };
+
+type CategoryChipProps = {
+  isSelected: boolean;
+  label: string;
+  onPress: () => void;
+};
+
+function CategoryChip({ isSelected, label, onPress }: CategoryChipProps) {
+  const { animatedStyle, onPressIn, onPressOut } = usePressScale({
+    pressedScale: 0.97,
+  });
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <Pressable
+        className={clsx(
+          "rounded-lg px-4 py-3",
+          isSelected ? "bg-primary" : "bg-white",
+        )}
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+      >
+        <Text
+          className={clsx(
+            "font-inter-regular text-sm",
+            isSelected
+              ? "text-neutral font-inter-semibold"
+              : "text-text/75",
+          )}
+        >
+          {label}
+        </Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
 
 export function CategorySelector({
   label,
@@ -28,25 +66,12 @@ export function CategorySelector({
           const isSelected = option.value === value;
 
           return (
-            <Pressable
+            <CategoryChip
               key={option.value}
-              className={clsx(
-                "rounded-lg px-4 py-3",
-                isSelected ? "bg-primary" : "bg-white",
-              )}
+              isSelected={isSelected}
+              label={option.label}
               onPress={() => onChange(option.value)}
-            >
-              <Text
-                className={clsx(
-                  "font-inter-regular text-sm",
-                  isSelected
-                    ? "text-neutral font-inter-semibold"
-                    : "text-text/75",
-                )}
-              >
-                {option.label}
-              </Text>
-            </Pressable>
+            />
           );
         })}
       </View>

@@ -1,5 +1,6 @@
 import Abstract from "@/assets/abstract.svg";
 import { useAlertDialog } from "@/components/AlertDialog";
+import { AnimatedEntrance } from "@/components/AnimatedEntrance";
 import { Loading } from "@/components/Loading";
 import { MetricCard } from "@/components/MetricCard";
 import { TransactionCard } from "@/components/TransactionCard";
@@ -182,26 +183,28 @@ export default function Index() {
       contentContainerClassName="px-6 pb-12 pt-10"
       showsVerticalScrollIndicator={false}
     >
-      <View className="mt-8 overflow-hidden rounded-lg bg-primary px-6 pb-6 pt-7">
-        <Abstract
-          width={150}
-          height={150}
-          style={{
-            opacity: 0.2,
-            position: "absolute",
-            right: 24,
-            top: -18,
-          }}
-        />
+      <AnimatedEntrance delay={30}>
+        <View className="mt-8 overflow-hidden rounded-lg bg-primary px-6 pb-6 pt-7">
+          <Abstract
+            width={150}
+            height={150}
+            style={{
+              opacity: 0.2,
+              position: "absolute",
+              right: 24,
+              top: -18,
+            }}
+          />
 
-        <Text className="font-inter-regular text-sm uppercase text-neutral/80">
-          Saldo em caixa
-        </Text>
+          <Text className="font-inter-regular text-sm uppercase text-neutral/80">
+            Saldo em caixa
+          </Text>
 
-        <Text className="mt-5 font-inter-bold text-xl leading-none text-neutral">
-          {formatCurrencyFromCents(summary.balanceInCents)}
-        </Text>
-      </View>
+          <Text className="mt-5 font-inter-bold text-xl leading-none text-neutral">
+            {formatCurrencyFromCents(summary.balanceInCents)}
+          </Text>
+        </View>
+      </AnimatedEntrance>
 
       <View className="mt-7 gap-4">
         <MetricCard
@@ -211,6 +214,7 @@ export default function Index() {
             summary.income.previousTotalInCents,
             summary.income.changePercent,
           )}
+          delay={110}
           title="Entrada mensal"
           variant="income"
         />
@@ -222,33 +226,39 @@ export default function Index() {
             summary.expense.previousTotalInCents,
             summary.expense.changePercent,
           )}
+          delay={170}
           title="Despesas mensais"
           variant="expense"
         />
       </View>
 
-      <View className="mt-6">
-        <Text className="text-text text-sm font-inter-medium">
-          Transações recentes
-        </Text>
-      </View>
+      <AnimatedEntrance delay={230}>
+        <View className="mt-6">
+          <Text className="text-text text-sm font-inter-medium">
+            Transações recentes
+          </Text>
+        </View>
+      </AnimatedEntrance>
 
       <View className="mt-4 gap-4">
         {summary.recentTransactions.length === 0 ? (
-          <View className="rounded-lg bg-white px-5 py-5">
-            <Text className="font-inter-semibold text-sm text-text">
-              Nenhuma transação cadastrada
-            </Text>
-            <Text className="mt-2 font-inter-regular text-sm leading-5 text-text/65">
-              As movimentações salvas em receita e despesa aparecerão aqui.
-            </Text>
-          </View>
+          <AnimatedEntrance delay={280}>
+            <View className="rounded-lg bg-white px-5 py-5">
+              <Text className="font-inter-semibold text-sm text-text">
+                Nenhuma transação cadastrada
+              </Text>
+              <Text className="mt-2 font-inter-regular text-sm leading-5 text-text/65">
+                As movimentações salvas em receita e despesa aparecerão aqui.
+              </Text>
+            </View>
+          </AnimatedEntrance>
         ) : (
-          summary.recentTransactions.map((transaction) => (
+          summary.recentTransactions.map((transaction, index) => (
             <TransactionCard
               key={transaction.id}
               amount={formatSignedCurrencyFromCents(transaction.amountInCents)}
               category={transaction.category}
+              delay={280 + index * 70}
               description={formatTransactionDescription(transaction)}
               onPress={() => router.push(`/transactions/${transaction.id}`)}
               title={transaction.title}

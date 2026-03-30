@@ -1,8 +1,9 @@
-import { listTransactions } from "@/database";
 import { useAlertDialog } from "@/components/AlertDialog";
+import { AnimatedEntrance } from "@/components/AnimatedEntrance";
 import { CategorySelector } from "@/components/CategorySelector";
 import { Loading } from "@/components/Loading";
 import { TransactionCard } from "@/components/TransactionCard";
+import { listTransactions } from "@/database";
 import type {
   HistoryItem,
   HistoryPeriod,
@@ -14,12 +15,12 @@ import {
   formatCurrencyFromCents,
   formatSignedCurrencyFromCents,
 } from "@/utils/currency";
-import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import clsx from "clsx";
+import { useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { SectionList, Text, View } from "react-native";
-import { useSQLiteContext } from "expo-sqlite";
 
 const PERIOD_OPTIONS: Array<{ label: string; value: HistoryPeriod }> = [
   { label: "Hoje", value: "today" },
@@ -44,7 +45,7 @@ function isSameDay(first: Date, second: Date) {
 }
 
 function formatCountLabel(count: number) {
-  return count === 1 ? "1 movimentacao" : `${count} movimentacoes`;
+  return count === 1 ? "1 movimentação" : `${count} movimentações`;
 }
 
 function formatSectionTitle(date: Date) {
@@ -88,7 +89,7 @@ function SummaryStat({
   return (
     <View
       className={clsx(
-        "flex-1 rounded-2xl px-4 py-3",
+        "flex-1 rounded-lg px-4 py-3",
         tone === "income" ? "bg-[#E9F5EE]" : "bg-[#F9E9E3]",
       )}
     >
@@ -175,17 +176,16 @@ export default function History() {
     0,
   );
 
-  const groupedTransactions = transactions.reduce<Record<string, HistoryItem[]>>(
-    (groups, transaction) => {
-      const key = startOfDay(new Date(transaction.occurredAt)).toISOString();
+  const groupedTransactions = transactions.reduce<
+    Record<string, HistoryItem[]>
+  >((groups, transaction) => {
+    const key = startOfDay(new Date(transaction.occurredAt)).toISOString();
 
-      groups[key] ??= [];
-      groups[key].push(transaction);
+    groups[key] ??= [];
+    groups[key].push(transaction);
 
-      return groups;
-    },
-    {},
-  );
+    return groups;
+  }, {});
 
   const sections: HistorySection[] = Object.entries(groupedTransactions).map(
     ([key, data]) => ({
@@ -208,79 +208,88 @@ export default function History() {
       keyExtractor={(item) => item.id}
       ListEmptyComponent={
         isLoading ? (
-          <View className="items-center py-12">
-            <Loading />
-          </View>
+          <AnimatedEntrance delay={120}>
+            <View className="items-center py-12">
+              <Loading />
+            </View>
+          </AnimatedEntrance>
         ) : (
-          <View className="rounded-[24px] bg-white px-5 py-6">
-            <Text className="font-inter-semibold text-base text-text">
-              Nenhuma movimentacao encontrada
-            </Text>
-            <Text className="mt-2 font-inter-regular text-sm leading-5 text-text/65">
-              Ajuste os filtros para ver outras entradas e despesas.
-            </Text>
-          </View>
+          <AnimatedEntrance delay={120}>
+            <View className="rounded-lg bg-white px-5 py-6">
+              <Text className="font-inter-semibold text-base text-text">
+                Nenhuma movimentacao encontrada
+              </Text>
+              <Text className="mt-2 font-inter-regular text-sm leading-5 text-text/65">
+                Ajuste os filtros para ver outras entradas e despesas.
+              </Text>
+            </View>
+          </AnimatedEntrance>
         )
       }
       ListHeaderComponent={
         <View className="pb-8">
-          <View className="mt-6 gap-4">
-            <CategorySelector
-              label="Período"
-              onChange={(value) => setPeriod(value as HistoryPeriod)}
-              options={PERIOD_OPTIONS}
-              value={period}
-            />
-
-            <CategorySelector
-              label="Mostrar"
-              onChange={(value) => setType(value as HistoryType)}
-              options={TYPE_OPTIONS}
-              value={type}
-            />
-          </View>
-
-          <View className="mt-7 rounded-lg bg-white px-5 py-5">
-            <Text className="font-inter-semibold text-[10px] uppercase tracking-[1.3px] text-text/75">
-              Resumo do período
-            </Text>
-
-            <View className="mt-4 flex-row items-end justify-between gap-3">
-              <View className="flex-1">
-                <Text className="font-inter-regular text-sm text-text/60">
-                  Saldo filtrado
-                </Text>
-
-                <Text
-                  className={clsx(
-                    "mt-1 font-inter-bold text-2xl",
-                    netTotal >= 0 ? "text-primary" : "text-[#8F2D08]",
-                  )}
-                >
-                  {formatSignedCurrencyFromCents(netTotal)}
-                </Text>
-              </View>
-
-              <View className="rounded-full bg-background px-3 py-2">
-                <Text className="font-inter-medium text-[10px] uppercase tracking-[0.9px] text-text/70">
-                  {transactions.length} itens
-                </Text>
-              </View>
-            </View>
-
-            <View className="mt-5 flex-row gap-3">
-              <SummaryStat
-                label="Entradas"
-                tone="income"
-                value={formatCurrencyFromCents(incomeTotal)}
+          <AnimatedEntrance delay={40}>
+            <View className="mt-6 gap-4">
+              <CategorySelector
+                label="Período"
+                onChange={(value) => setPeriod(value as HistoryPeriod)}
+                options={PERIOD_OPTIONS}
+                value={period}
               />
-              <SummaryStat
-                label="Despesas"
-                tone="expense"
-                value={formatCurrencyFromCents(expenseTotal)}
+
+              <CategorySelector
+                label="Mostrar"
+                onChange={(value) => setType(value as HistoryType)}
+                options={TYPE_OPTIONS}
+                value={type}
               />
             </View>
-          </View>
+          </AnimatedEntrance>
+
+          <AnimatedEntrance delay={110}>
+            <View className="mt-7 rounded-lg bg-white px-5 py-5">
+              <Text className="font-inter-semibold text-[10px] uppercase tracking-[1.3px] text-text/75">
+                Resumo do período
+              </Text>
+
+              <View className="mt-4 flex-row items-end justify-between gap-3">
+                <View className="flex-1">
+                  <Text className="font-inter-regular text-sm text-text/60">
+                    Saldo filtrado
+                  </Text>
+
+                  <Text
+                    className={clsx(
+                      "mt-1 font-inter-bold text-2xl",
+                      netTotal >= 0 ? "text-primary" : "text-[#8F2D08]",
+                    )}
+                  >
+                    {formatSignedCurrencyFromCents(netTotal)}
+                  </Text>
+                </View>
+
+                <View className="rounded-full bg-background px-3 py-2">
+                  <Text className="font-inter-medium text-xs uppercase tracking-[0.7px] text-text/70">
+                    {transactions.length}{" "}
+                    {transactions.length === 1 ? "Item" : "Itens"}
+                  </Text>
+                </View>
+              </View>
+
+              <View className="mt-5 flex-row gap-3">
+                <SummaryStat
+                  label="Entradas"
+                  tone="income"
+                  value={formatCurrencyFromCents(incomeTotal)}
+                />
+                <SummaryStat
+                  label="Despesas"
+                  tone="expense"
+                  value={formatCurrencyFromCents(expenseTotal)}
+                />
+              </View>
+            </View>
+          </AnimatedEntrance>
         </View>
       }
       renderItem={({ item, index, section }) => (
@@ -288,6 +297,7 @@ export default function History() {
           <TransactionCard
             amount={formatSignedCurrencyFromCents(item.amountInCents)}
             category={item.category}
+            delay={Math.min(index, 4) * 55}
             description={formatTransactionDescription(item)}
             onPress={() => router.push(`/transactions/${item.id}`)}
             title={item.title}
@@ -302,7 +312,7 @@ export default function History() {
             {section.title}
           </Text>
 
-          <Text className="font-inter-regular text-[11px] uppercase tracking-[0.8px] text-text/55">
+          <Text className="font-inter-regular text-sm tracking-[0.8px] text-text/55">
             {section.countLabel}
           </Text>
         </View>

@@ -1,4 +1,5 @@
 import { useAlertDialog } from "@/components/AlertDialog";
+import { AnimatedEntrance } from "@/components/AnimatedEntrance";
 import { CategorySelector } from "@/components/CategorySelector";
 import { DatePickerField } from "@/components/DatePickerField";
 import { InputField } from "@/components/InputField";
@@ -197,21 +198,24 @@ export default function TransactionEditScreen() {
         </View>
 
         <View className="px-6 pt-8">
-          <View className="rounded-[24px] bg-white px-6 py-6">
-            <Text className="font-inter-semibold text-xl text-text">
-              Movimentação não encontrada
-            </Text>
-            <Text className="mt-3 font-inter-regular text-base leading-6 text-text/70">
-              Essa transação pode ter sido removida ou ainda não estar disponível.
-            </Text>
+          <AnimatedEntrance delay={60}>
+            <View className="rounded-[24px] bg-white px-6 py-6">
+              <Text className="font-inter-semibold text-xl text-text">
+                Movimentação não encontrada
+              </Text>
+              <Text className="mt-3 font-inter-regular text-base leading-6 text-text/70">
+                Essa transação pode ter sido removida ou ainda não estar
+                disponível.
+              </Text>
 
-            <View className="mt-8">
-              <PrimaryButton
-                label="Voltar ao histórico"
-                onPress={navigateToHistory}
-              />
+              <View className="mt-8">
+                <PrimaryButton
+                  label="Voltar ao histórico"
+                  onPress={navigateToHistory}
+                />
+              </View>
             </View>
-          </View>
+          </AnimatedEntrance>
         </View>
       </View>
     );
@@ -327,90 +331,96 @@ export default function TransactionEditScreen() {
         contentContainerClassName="px-6 pb-14 pt-8"
         showsVerticalScrollIndicator={false}
       >
-        <View
-          className={clsx(
-            "rounded-xl border-t-[3px] bg-white px-6 pb-6 pt-5",
-            copy.borderClassName,
-          )}
-        >
-          <Text className="font-inter-semibold text-sm uppercase tracking-[1.3px] text-text/75">
-            Valor total
-          </Text>
-
-          <View className="mt-6 flex-row items-center gap-2">
-            <Text
-              className={clsx(
-                "font-inter-semibold text-2xl",
-                copy.currencyClassName,
-              )}
-            >
-              R$
+        <AnimatedEntrance delay={40}>
+          <View
+            className={clsx(
+              "rounded-lg border-t-[3px] bg-white px-6 pb-6 pt-5",
+              copy.borderClassName,
+            )}
+          >
+            <Text className="font-inter-semibold text-sm uppercase tracking-[1.3px] text-text/75">
+              Valor total
             </Text>
-            <TextInput
-              className="flex-1 py-0 font-inter-medium text-2xl text-text"
+
+            <View className="mt-6 flex-row items-center gap-2">
+              <Text
+                className={clsx(
+                  "font-inter-semibold text-2xl",
+                  copy.currencyClassName,
+                )}
+              >
+                R$
+              </Text>
+              <TextInput
+                className="flex-1 py-0 font-inter-medium text-2xl text-text"
+                cursorColor={copy.accentColor}
+                keyboardType="number-pad"
+                onChangeText={(value) => setAmount(formatCurrencyInput(value))}
+                placeholder="0,00"
+                placeholderTextColor="rgba(26, 28, 25, 0.14)"
+                selectionColor={copy.accentColor}
+                style={{ height: 40, paddingVertical: 0 }}
+                value={amount}
+              />
+            </View>
+          </View>
+        </AnimatedEntrance>
+
+        <AnimatedEntrance delay={120}>
+          <View className="mt-8 gap-6">
+            <InputField
               cursorColor={copy.accentColor}
-              keyboardType="number-pad"
-              onChangeText={(value) => setAmount(formatCurrencyInput(value))}
-              placeholder="0,00"
-              placeholderTextColor="rgba(26, 28, 25, 0.14)"
+              label={copy.fieldLabel}
+              onChangeText={setTitle}
+              placeholder={copy.fieldPlaceholder}
               selectionColor={copy.accentColor}
-              style={{ height: 40, paddingVertical: 0 }}
-              value={amount}
+              value={title}
+            />
+
+            <DatePickerField
+              accentColor={copy.dateAccentColor}
+              label="Data da transação"
+              onChange={setTransactionDate}
+              value={transactionDate}
+            />
+
+            <CategorySelector
+              label={copy.categoryLabel}
+              onChange={(value) => setCategory(value as TransactionCategory)}
+              options={categoryOptions}
+              value={category}
+            />
+
+            <InputField
+              cursorColor={copy.accentColor}
+              label="Notas / Descrição"
+              multiline
+              onChangeText={setNotes}
+              placeholder={copy.notesPlaceholder}
+              selectionColor={copy.accentColor}
+              value={notes}
             />
           </View>
-        </View>
+        </AnimatedEntrance>
 
-        <View className="mt-8 gap-6">
-          <InputField
-            cursorColor={copy.accentColor}
-            label={copy.fieldLabel}
-            onChangeText={setTitle}
-            placeholder={copy.fieldPlaceholder}
-            selectionColor={copy.accentColor}
-            value={title}
-          />
+        <AnimatedEntrance delay={200}>
+          <View className="mt-10 gap-3">
+            <PrimaryButton
+              disabled={!isFormValid || isDeleting}
+              isLoading={isSaving}
+              label={copy.saveLabel}
+              onPress={() => void handleSaveChanges()}
+            />
 
-          <DatePickerField
-            accentColor={copy.dateAccentColor}
-            label="Data da transação"
-            onChange={setTransactionDate}
-            value={transactionDate}
-          />
-
-          <CategorySelector
-            label={copy.categoryLabel}
-            onChange={(value) => setCategory(value as TransactionCategory)}
-            options={categoryOptions}
-            value={category}
-          />
-
-          <InputField
-            cursorColor={copy.accentColor}
-            label="Notas / Descrição"
-            multiline
-            onChangeText={setNotes}
-            placeholder={copy.notesPlaceholder}
-            selectionColor={copy.accentColor}
-            value={notes}
-          />
-        </View>
-
-        <View className="mt-10 gap-3">
-          <PrimaryButton
-            disabled={!isFormValid || isDeleting}
-            isLoading={isSaving}
-            label={copy.saveLabel}
-            onPress={() => void handleSaveChanges()}
-          />
-
-          <PrimaryButton
-            disabled={isSaving}
-            isLoading={isDeleting}
-            label="Excluir movimentação"
-            onPress={handleDeleteRequest}
-            variant="dangerSecondary"
-          />
-        </View>
+            <PrimaryButton
+              disabled={isSaving}
+              isLoading={isDeleting}
+              label="Excluir movimentação"
+              onPress={handleDeleteRequest}
+              variant="dangerSecondary"
+            />
+          </View>
+        </AnimatedEntrance>
       </ScrollView>
     </View>
   );

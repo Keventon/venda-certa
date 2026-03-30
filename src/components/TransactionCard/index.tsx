@@ -1,14 +1,17 @@
+import { AnimatedEntrance } from "@/components/AnimatedEntrance";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { usePressScale } from "@/hooks/usePressScale";
 import type {
   TransactionCategory,
   TransactionVariant,
 } from "@/types/transactions";
 import clsx from "clsx";
-import { Pressable, Text, View } from "react-native";
+import { Animated, Pressable, Text, View } from "react-native";
 
 type TransactionCardProps = {
   amount: string;
   category: TransactionCategory;
+  delay?: number;
   description: string;
   onPress?: () => void;
   title: string;
@@ -60,6 +63,7 @@ const CATEGORY_ICONS: Record<
 export function TransactionCard({
   amount,
   category,
+  delay = 0,
   description,
   onPress,
   title,
@@ -68,61 +72,71 @@ export function TransactionCard({
 }: TransactionCardProps) {
   const palette = VARIANTS[variant];
   const iconName = CATEGORY_ICONS[category] ?? "briefcase-check-outline";
+  const { animatedStyle, onPressIn, onPressOut } = usePressScale({
+    disabled: !onPress,
+    pressedScale: 0.985,
+  });
 
   return (
-    <Pressable
-      className="rounded-lg bg-white px-4 py-4"
-      disabled={!onPress}
-      onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed && onPress ? 0.88 : 1,
-      })}
-    >
-      <View className="flex-row items-center gap-3">
-        <View
-          className={clsx(
-            "h-14 w-14 items-center justify-center rounded-2xl",
-            palette.iconBadgeClassName,
-          )}
+    <AnimatedEntrance delay={delay}>
+      <Animated.View style={animatedStyle}>
+        <Pressable
+          className="rounded-lg bg-white px-4 py-4"
+          disabled={!onPress}
+          onPress={onPress}
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
+          style={({ pressed }) => ({
+            opacity: pressed && onPress ? 0.94 : 1,
+          })}
         >
-          <MaterialCommunityIcons
-            color={palette.iconColor}
-            name={iconName}
-            size={22}
-          />
-        </View>
-
-        <View className="flex-1">
-          <View className="flex-row items-start justify-between gap-3">
-            <Text className="flex-1 font-inter-semibold text-sm leading-[24px] text-text">
-              {title}
-            </Text>
-
-            <Text
+          <View className="flex-row items-center gap-3">
+            <View
               className={clsx(
-                "pt-0.5 font-inter-semibold text-sm",
-                palette.amountClassName,
+                "h-14 w-14 items-center justify-center rounded-2xl",
+                palette.iconBadgeClassName,
               )}
             >
-              {amount}
-            </Text>
-          </View>
+              <MaterialCommunityIcons
+                color={palette.iconColor}
+                name={iconName}
+                size={22}
+              />
+            </View>
 
-          <View className="mt-1 flex-row items-center justify-between gap-3">
-            <Text className="flex-1 font-inter-regular text-[11px] leading-[16px] text-text/70">
-              {description}
-            </Text>
+            <View className="flex-1">
+              <View className="flex-row items-start justify-between gap-3">
+                <Text className="flex-1 font-inter-semibold text-sm leading-[24px] text-text">
+                  {title}
+                </Text>
 
-            <View
-              className={clsx("rounded-md px-2 py-1", palette.badgeClassName)}
-            >
-              <Text className="font-inter-medium text-[10px] uppercase tracking-[0.6px] text-text/75">
-                {typeLabel}
-              </Text>
+                <Text
+                  className={clsx(
+                    "pt-0.5 font-inter-semibold text-sm",
+                    palette.amountClassName,
+                  )}
+                >
+                  {amount}
+                </Text>
+              </View>
+
+              <View className="mt-1 flex-row items-center justify-between gap-3">
+                <Text className="flex-1 font-inter-regular text-[11px] leading-[16px] text-text/70">
+                  {description}
+                </Text>
+
+                <View
+                  className={clsx("rounded-md px-2 py-1", palette.badgeClassName)}
+                >
+                  <Text className="font-inter-medium text-[10px] uppercase tracking-[0.6px] text-text/75">
+                    {typeLabel}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
-        </View>
-      </View>
-    </Pressable>
+        </Pressable>
+      </Animated.View>
+    </AnimatedEntrance>
   );
 }

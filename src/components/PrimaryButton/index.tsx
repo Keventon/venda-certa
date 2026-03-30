@@ -1,7 +1,13 @@
 import { colors } from "@/styles/colors";
+import { usePressScale } from "@/hooks/usePressScale";
 import clsx from "clsx";
 import type { TouchableOpacityProps } from "react-native";
-import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
+import {
+  ActivityIndicator,
+  Animated,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 
 type PrimaryButtonVariant =
   | "primary"
@@ -53,22 +59,36 @@ export function PrimaryButton({
   ...props
 }: PrimaryButtonProps) {
   const palette = VARIANTS[variant];
+  const isDisabled = disabled || isLoading;
+  const { animatedStyle, onPressIn, onPressOut } = usePressScale({
+    disabled: isDisabled,
+    pressedScale: 0.985,
+  });
 
   return (
-    <TouchableOpacity
-      {...props}
-      className={clsx(
-        "h-16 flex-row items-center justify-center gap-3 rounded-xl",
-        palette.backgroundClassName,
-        (disabled || isLoading) && "opacity-50",
-      )}
-      disabled={disabled || isLoading}
-      activeOpacity={0.7}
-    >
-      {isLoading ? <ActivityIndicator color={palette.spinnerColor} /> : null}
-      <Text className={clsx("font-inter-semibold text-base", palette.textClassName)}>
-        {label}
-      </Text>
-    </TouchableOpacity>
+    <Animated.View style={animatedStyle}>
+      <TouchableOpacity
+        {...props}
+        className={clsx(
+          "h-16 flex-row items-center justify-center gap-3 rounded-xl",
+          palette.backgroundClassName,
+          isDisabled && "opacity-50",
+        )}
+        disabled={isDisabled}
+        activeOpacity={0.82}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+      >
+        {isLoading ? <ActivityIndicator color={palette.spinnerColor} /> : null}
+        <Text
+          className={clsx(
+            "font-inter-semibold text-base",
+            palette.textClassName,
+          )}
+        >
+          {label}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }

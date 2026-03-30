@@ -1,14 +1,16 @@
 import { useAlertDialog } from "@/components/AlertDialog";
+import { AnimatedEntrance } from "@/components/AnimatedEntrance";
 import { Loading } from "@/components/Loading";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { SummaryField } from "@/components/SummaryField";
 import { getCategoryLabel } from "@/constants/transactionCategories";
 import { getTransactionById } from "@/database";
 import type {
   TransactionRecord,
   TransactionVariant,
 } from "@/types/transactions";
-import { formatSignedCurrencyFromCents } from "@/utils/currency";
+import { formatCurrencyFromCents } from "@/utils/currency";
 import clsx from "clsx";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
@@ -59,30 +61,6 @@ function normalizeRouteParam(value: string | string[] | undefined) {
   }
 
   return value;
-}
-
-type SummaryFieldProps = {
-  isMuted?: boolean;
-  label: string;
-  value: string;
-};
-
-function SummaryField({ isMuted = false, label, value }: SummaryFieldProps) {
-  return (
-    <View className="rounded-2xl bg-background px-4 py-4">
-      <Text className="font-inter-semibold text-[11px] uppercase tracking-[1px] text-text/55">
-        {label}
-      </Text>
-      <Text
-        className={clsx(
-          "mt-2 font-inter-regular text-[15px] leading-6 text-text",
-          isMuted && "text-text/55",
-        )}
-      >
-        {value}
-      </Text>
-    </View>
-  );
 }
 
 export default function TransactionDetails() {
@@ -176,21 +154,24 @@ export default function TransactionDetails() {
         </View>
 
         <View className="px-6 pt-8">
-          <View className="rounded-[24px] bg-white px-6 py-6">
-            <Text className="font-inter-semibold text-xl text-text">
-              Movimentação não encontrada
-            </Text>
-            <Text className="mt-3 font-inter-regular text-base leading-6 text-text/70">
-              Essa transação pode ter sido removida ou ainda não estar disponível.
-            </Text>
+          <AnimatedEntrance delay={60}>
+            <View className="rounded-[24px] bg-white px-6 py-6">
+              <Text className="font-inter-semibold text-xl text-text">
+                Movimentação não encontrada
+              </Text>
+              <Text className="mt-3 font-inter-regular text-base leading-6 text-text/70">
+                Essa transação pode ter sido removida ou ainda não estar
+                disponível.
+              </Text>
 
-            <View className="mt-8">
-              <PrimaryButton
-                label="Voltar ao histórico"
-                onPress={navigateBack}
-              />
+              <View className="mt-8">
+                <PrimaryButton
+                  label="Voltar ao histórico"
+                  onPress={navigateBack}
+                />
+              </View>
             </View>
-          </View>
+          </AnimatedEntrance>
         </View>
       </View>
     );
@@ -216,89 +197,77 @@ export default function TransactionDetails() {
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-6 pb-14 pt-8"
+        contentContainerClassName="pb-14 pt-8"
         showsVerticalScrollIndicator={false}
       >
-        <View
-          className={clsx(
-            "rounded-[28px] border-t-[3px] bg-white px-6 pb-6 pt-5",
-            copy.borderClassName,
-          )}
-        >
-          <Text className="font-inter-semibold text-[11px] uppercase tracking-[1.3px] text-text/60">
-            {copy.eyebrow}
-          </Text>
-          <Text className="mt-4 font-inter-semibold text-[27px] leading-[36px] text-text">
-            {transaction.title}
-          </Text>
-
-          <Text
-            className={clsx(
-              "mt-5 font-inter-semibold text-[34px] leading-[40px]",
-              copy.currencyClassName,
-            )}
-          >
-            {formatSignedCurrencyFromCents(transaction.amountInCents)}
-          </Text>
-
-          <View className="mt-5 flex-row flex-wrap gap-3">
-            <View className="rounded-full bg-background px-3 py-2">
-              <Text className="font-inter-medium text-[11px] uppercase tracking-[0.8px] text-text/70">
-                {getCategoryLabel(transaction.variant, transaction.category)}
+        <AnimatedEntrance delay={40}>
+          <View className="px-6">
+            <View
+              className={clsx(
+                "rounded-lg border-t-[3px] bg-white px-6 pb-6 pt-5",
+                copy.borderClassName,
+              )}
+            >
+              <Text className="font-inter-semibold text-base text-text/60">
+                {copy.eyebrow}
               </Text>
-            </View>
 
-            <View className="rounded-full bg-background px-3 py-2">
-              <Text className="font-inter-medium text-[11px] uppercase tracking-[0.8px] text-text/70">
-                {formatDisplayDate(transaction.occurredAt)}
+              <Text
+                className={clsx(
+                  "font-inter-semibold text-xl mt-2",
+                  copy.currencyClassName,
+                )}
+              >
+                {formatCurrencyFromCents(Math.abs(transaction.amountInCents))}
               </Text>
             </View>
           </View>
+        </AnimatedEntrance>
 
-          <Text className="mt-5 font-inter-regular text-sm leading-6 text-text/65">
-            {transaction.variant === "income"
-              ? "Confira os dados da entrada antes de seguir para a edição."
-              : "Confira os dados da saída antes de seguir para a edição."}
-          </Text>
-        </View>
+        <AnimatedEntrance delay={120}>
+          <View className="mt-6 rounded-lg bg-white px-6 py-6">
+            <Text className="font-inter-semibold text-base ml-2 text-text/75">
+              Resumo da movimentação
+            </Text>
 
-        <View className="mt-6 rounded-[28px] bg-white px-6 py-6">
-          <Text className="font-inter-semibold text-sm uppercase tracking-[1.3px] text-text/75">
-            Resumo da movimentação
-          </Text>
+            <View className="mt-5 gap-3">
+              <SummaryField label="Descrição" value={transaction.title} />
+              <SummaryField
+                label="Categoria"
+                value={getCategoryLabel(
+                  transaction.variant,
+                  transaction.category,
+                )}
+              />
+              <SummaryField
+                label="Data da transação"
+                value={formatDisplayDate(transaction.occurredAt)}
+              />
+              <SummaryField
+                label="Última atualização"
+                value={formatDisplayDateTime(transaction.updatedAt)}
+              />
+              <SummaryField
+                isMuted={!transaction.notes?.trim()}
+                label="Notas / descrição"
+                value={
+                  transaction.notes?.trim() ||
+                  "Nenhuma observação registrada para essa movimentação."
+                }
+              />
+            </View>
+          </View>
+        </AnimatedEntrance>
 
-          <View className="mt-5 gap-3">
-            <SummaryField label="Descrição" value={transaction.title} />
-            <SummaryField
-              label="Categoria"
-              value={getCategoryLabel(transaction.variant, transaction.category)}
-            />
-            <SummaryField
-              label="Data da transação"
-              value={formatDisplayDate(transaction.occurredAt)}
-            />
-            <SummaryField
-              label="Última atualização"
-              value={formatDisplayDateTime(transaction.updatedAt)}
-            />
-            <SummaryField
-              isMuted={!transaction.notes?.trim()}
-              label="Notas / descrição"
-              value={
-                transaction.notes?.trim() ||
-                "Nenhuma observação registrada para essa movimentação."
-              }
+        <AnimatedEntrance delay={190}>
+          <View className="mt-8 px-6">
+            <PrimaryButton
+              label="Editar movimentação"
+              onPress={navigateToEdit}
+              variant="secondary"
             />
           </View>
-        </View>
-
-        <View className="mt-8">
-          <PrimaryButton
-            label="Editar movimentação"
-            onPress={navigateToEdit}
-            variant="secondary"
-          />
-        </View>
+        </AnimatedEntrance>
       </ScrollView>
     </View>
   );
