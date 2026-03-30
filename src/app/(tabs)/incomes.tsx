@@ -13,6 +13,7 @@ import { colors } from "@/styles/colors";
 import type { TransactionCategory } from "@/types/transactions";
 import {
   formatCurrencyInput,
+  hasPositiveCurrencyInput,
   parseCurrencyInputToCents,
 } from "@/utils/currency";
 import { useRouter } from "expo-router";
@@ -33,7 +34,8 @@ export default function Incomes() {
   const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState("");
 
-  const isFormValid = amount.length > 0 && source.trim().length > 0;
+  const isAmountValid = hasPositiveCurrencyInput(amount);
+  const isFormValid = isAmountValid && source.trim().length > 0;
 
   function resetForm() {
     setAmount("");
@@ -44,7 +46,20 @@ export default function Incomes() {
   }
 
   async function handleSaveIncome() {
-    if (!isFormValid || isSaving) {
+    if (isSaving) {
+      return;
+    }
+
+    if (!isAmountValid) {
+      showAlert({
+        message: "Informe um valor maior que zero para salvar a receita.",
+        title: "Valor inválido",
+        tone: "info",
+      });
+      return;
+    }
+
+    if (!source.trim()) {
       return;
     }
 
@@ -92,7 +107,7 @@ export default function Incomes() {
       showsVerticalScrollIndicator={false}
     >
       <AnimatedEntrance delay={40}>
-        <View className="mt-8 rounded-xl border-t-[3px] border-primary bg-white px-6 pb-6 pt-5 shadow-sm">
+        <View className="mt-8 rounded-xl border-t-[3px] border-primary bg-white px-6 pb-6 pt-5">
           <Text className="font-inter-semibold text-sm uppercase tracking-[1.3px] text-text/75">
             Valor total
           </Text>

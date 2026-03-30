@@ -1,8 +1,9 @@
-import { colors } from "@/styles/colors";
 import { usePressScale } from "@/hooks/usePressScale";
+import { colors } from "@/styles/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import clsx from "clsx";
 import type { ReactNode } from "react";
-import { Animated, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Platform, Text, TouchableOpacity, View } from "react-native";
 
 type ScreenHeaderProps = {
   onBack: () => void;
@@ -10,17 +11,19 @@ type ScreenHeaderProps = {
   title: string;
 };
 
-export function ScreenHeader({
-  onBack,
-  rightSlot,
-  title,
-}: ScreenHeaderProps) {
+export function ScreenHeader({ onBack, rightSlot, title }: ScreenHeaderProps) {
   const { animatedStyle, onPressIn, onPressOut } = usePressScale({
     pressedScale: 0.96,
   });
 
   return (
-    <View className="relative h-12 flex-row items-center justify-between">
+    <View
+      className={clsx(
+        Platform.OS === "ios"
+          ? "relative h-12 mt-6 flex-row items-center justify-between"
+          : "relative h-12 flex-row items-center justify-between",
+      )}
+    >
       <Animated.View style={animatedStyle}>
         <TouchableOpacity
           activeOpacity={0.82}
@@ -29,7 +32,11 @@ export function ScreenHeader({
           onPressIn={onPressIn}
           onPressOut={onPressOut}
         >
-          <MaterialCommunityIcons color={colors.text} name="arrow-left" size={24} />
+          <MaterialCommunityIcons
+            color={colors.text}
+            name="arrow-left"
+            size={24}
+          />
         </TouchableOpacity>
       </Animated.View>
 

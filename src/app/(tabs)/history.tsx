@@ -247,7 +247,7 @@ export default function History() {
           </AnimatedEntrance>
 
           <AnimatedEntrance delay={110}>
-            <View className="mt-7 rounded-lg bg-white px-5 py-5 shadow-sm">
+            <View className="mt-7 rounded-lg bg-white px-5 py-5">
               <Text className="font-inter-semibold text-[10px] uppercase tracking-[1.3px] text-text/75">
                 Resumo do período
               </Text>

@@ -95,6 +95,12 @@ function generateTransactionId() {
   return `tx-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function assertNonZeroAmount(amountInCents: number) {
+  if (amountInCents === 0) {
+    throw new Error("Transaction amount must be different from zero");
+  }
+}
+
 function mapRowToTransaction(row: TransactionRow): TransactionRecord {
   return {
     amountInCents: row.amount_in_cents,
@@ -154,6 +160,8 @@ export async function createTransaction(
   db: SQLiteDatabase,
   input: CreateTransactionInput,
 ) {
+  assertNonZeroAmount(input.amountInCents);
+
   const now = new Date().toISOString();
   const transaction: TransactionRecord = {
     ...input,
@@ -241,6 +249,8 @@ export async function updateTransaction(
     ...input,
     updatedAt: new Date().toISOString(),
   };
+
+  assertNonZeroAmount(updated.amountInCents);
 
   await db.runAsync(
     `

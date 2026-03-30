@@ -240,7 +240,7 @@ export default function Index() {
         </View>
       </AnimatedEntrance>
 
-      <View className="mt-4 gap-3">
+      <View className="mt-4">
         {summary.recentTransactions.length === 0 ? (
           <AnimatedEntrance delay={280}>
             <View className="rounded-lg bg-white px-5 py-5">
@@ -254,17 +254,23 @@ export default function Index() {
           </AnimatedEntrance>
         ) : (
           summary.recentTransactions.map((transaction, index) => (
-            <TransactionCard
+            <View
               key={transaction.id}
-              amount={formatSignedCurrencyFromCents(transaction.amountInCents)}
-              category={transaction.category}
-              delay={280 + index * 70}
-              description={formatTransactionDescription(transaction)}
-              onPress={() => router.push(`/transactions/${transaction.id}`)}
-              title={transaction.title}
-              typeLabel={transaction.typeLabel}
-              variant={transaction.variant}
-            />
+              className={
+                index === summary.recentTransactions.length - 1 ? "" : "mb-2"
+              }
+            >
+              <TransactionCard
+                amount={formatSignedCurrencyFromCents(transaction.amountInCents)}
+                category={transaction.category}
+                delay={280 + index * 70}
+                description={formatTransactionDescription(transaction)}
+                onPress={() => router.push(`/transactions/${transaction.id}`)}
+                title={transaction.title}
+                typeLabel={transaction.typeLabel}
+                variant={transaction.variant}
+              />
+            </View>
           ))
         )}
       </View>

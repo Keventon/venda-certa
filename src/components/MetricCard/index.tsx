@@ -42,15 +42,15 @@ const VARIANTS: Record<
 export function MetricCard({
   amount,
   change,
-  delay = 0,
-  title,
-  variant,
+    delay = 0,
+    title,
+    variant,
 }: MetricCardProps) {
   const palette = VARIANTS[variant];
 
   return (
     <AnimatedEntrance delay={delay}>
-      <View className="relative overflow-hidden rounded-lg bg-white px-5 py-5 shadow-sm">
+      <View className="relative overflow-hidden rounded-lg bg-white px-5 py-5">
         <View
           className={clsx(
             "absolute bottom-0 left-0 top-0 w-[5px]",

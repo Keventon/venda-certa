@@ -25,6 +25,7 @@ import type {
 import {
   formatCurrencyInput,
   formatCurrencyInputFromCents,
+  hasPositiveCurrencyInput,
   parseCurrencyInputToCents,
 } from "@/utils/currency";
 import clsx from "clsx";
@@ -224,10 +225,24 @@ export default function TransactionEditScreen() {
   const copy = VARIANT_COPY[transaction.variant];
   const categoryOptions = getCategoryOptionsByVariant(transaction.variant);
   const currentTransaction = transaction;
-  const isFormValid = amount.length > 0 && title.trim().length > 0;
+  const isAmountValid = hasPositiveCurrencyInput(amount);
+  const isFormValid = isAmountValid && title.trim().length > 0;
 
   async function handleSaveChanges() {
-    if (!transactionId || !isFormValid || isSaving || isDeleting) {
+    if (!transactionId || isSaving || isDeleting) {
+      return;
+    }
+
+    if (!isAmountValid) {
+      showAlert({
+        message: "Informe um valor maior que zero para salvar a movimentação.",
+        title: "Valor inválido",
+        tone: "info",
+      });
+      return;
+    }
+
+    if (!title.trim()) {
       return;
     }
 

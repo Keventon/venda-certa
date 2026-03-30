@@ -23,6 +23,10 @@ export function parseCurrencyInputToCents(value: string) {
   return Number(digits);
 }
 
+export function hasPositiveCurrencyInput(value: string) {
+  return parseCurrencyInputToCents(value) > 0;
+}
+
 export function formatCurrencyInputFromCents(valueInCents: number) {
   return formatCurrencyInput(String(Math.abs(valueInCents)));
 }

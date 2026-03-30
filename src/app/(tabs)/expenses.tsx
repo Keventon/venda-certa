@@ -11,7 +11,11 @@ import {
 } from "@/constants/transactionCategories";
 import { colors } from "@/styles/colors";
 import type { TransactionCategory } from "@/types/transactions";
-import { formatCurrencyInput, parseCurrencyInputToCents } from "@/utils/currency";
+import {
+  formatCurrencyInput,
+  hasPositiveCurrencyInput,
+  parseCurrencyInputToCents,
+} from "@/utils/currency";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
@@ -30,7 +34,8 @@ export default function Expenses() {
   const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState("");
 
-  const isFormValid = amount.length > 0 && vendor.trim().length > 0;
+  const isAmountValid = hasPositiveCurrencyInput(amount);
+  const isFormValid = isAmountValid && vendor.trim().length > 0;
 
   function resetForm() {
     setAmount("");
@@ -41,7 +46,20 @@ export default function Expenses() {
   }
 
   async function handleSaveExpense() {
-    if (!isFormValid || isSaving) {
+    if (isSaving) {
+      return;
+    }
+
+    if (!isAmountValid) {
+      showAlert({
+        message: "Informe um valor maior que zero para salvar a despesa.",
+        title: "Valor inválido",
+        tone: "info",
+      });
+      return;
+    }
+
+    if (!vendor.trim()) {
       return;
     }
 
@@ -89,7 +107,7 @@ export default function Expenses() {
       showsVerticalScrollIndicator={false}
     >
       <AnimatedEntrance delay={40}>
-        <View className="mt-8 rounded-xl border-t-[3px] border-[#FFB49A] bg-white px-6 pb-6 pt-5 shadow-sm">
+        <View className="mt-8 rounded-xl border-t-[3px] border-[#FFB49A] bg-white px-6 pb-6 pt-5">
           <Text className="font-inter-semibold text-sm uppercase tracking-[1.3px] text-text/75">
             Valor total
           </Text>
