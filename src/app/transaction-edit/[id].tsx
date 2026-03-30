@@ -183,6 +183,11 @@ export default function TransactionEditScreen() {
     router.replace("/history");
   }
 
+  function navigateToHistoryAfterDelete() {
+    router.dismissAll();
+    router.replace("/history");
+  }
+
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
@@ -293,7 +298,7 @@ export default function TransactionEditScreen() {
 
       showAlert({
         message: "A movimentação foi removida com sucesso.",
-        onClose: () => router.replace("/history"),
+        onClose: navigateToHistoryAfterDelete,
         title: "Movimentação excluída",
         tone: "success",
       });
