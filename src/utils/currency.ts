@@ -23,6 +23,10 @@ export function parseCurrencyInputToCents(value: string) {
   return Number(digits);
 }
 
+export function formatCurrencyInputFromCents(valueInCents: number) {
+  return formatCurrencyInput(String(Math.abs(valueInCents)));
+}
+
 export function formatCurrencyFromCents(valueInCents: number) {
   return (valueInCents / 100).toLocaleString("pt-BR", {
     currency: "BRL",

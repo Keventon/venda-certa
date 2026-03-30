@@ -1,10 +1,10 @@
+import { AlertDialogProvider } from "@/components/AlertDialog";
 import { DATABASE_NAME, migrateDatabaseIfNeeded } from "@/database";
-import { Tabs } from "expo-router";
+import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 
 import { Loading } from "@/components/Loading";
-import { TabBar } from "@/components/TabBar";
 import {
   Inter_300Light,
   Inter_400Regular,
@@ -41,15 +41,13 @@ export default function RootLayout() {
         databaseName={DATABASE_NAME}
         onInit={migrateDatabaseIfNeeded}
       >
-        <Tabs
-          screenOptions={{ headerShown: false }}
-          tabBar={(props) => <TabBar {...props} />}
-        >
-          <Tabs.Screen name="index" />
-          <Tabs.Screen name="incomes" />
-          <Tabs.Screen name="expenses" />
-          <Tabs.Screen name="history" />
-        </Tabs>
+        <AlertDialogProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="transactions/[id]" />
+            <Stack.Screen name="transaction-edit/[id]" />
+          </Stack>
+        </AlertDialogProvider>
       </SQLiteProvider>
     </>
   );

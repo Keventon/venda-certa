@@ -1,59 +1,50 @@
+import { createTransaction } from "@/database";
+import { useAlertDialog } from "@/components/AlertDialog";
 import { CategorySelector } from "@/components/CategorySelector";
 import { DatePickerField } from "@/components/DatePickerField";
 import { InputField } from "@/components/InputField";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { createTransaction } from "@/database";
+import {
+  DEFAULT_EXPENSE_CATEGORY,
+  EXPENSE_CATEGORIES,
+} from "@/constants/transactionCategories";
 import { colors } from "@/styles/colors";
 import type { TransactionCategory } from "@/types/transactions";
-import {
-  formatCurrencyInput,
-  parseCurrencyInputToCents,
-} from "@/utils/currency";
+import { formatCurrencyInput, parseCurrencyInputToCents } from "@/utils/currency";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
-import { Alert, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 
-const INCOME_CATEGORIES: Array<{
-  label: string;
-  value: TransactionCategory;
-}> = [
-  { label: "Venda balcão", value: "counter-sale" },
-  { label: "Delivery", value: "delivery" },
-  { label: "Evento", value: "event" },
-  { label: "Outros", value: "other" },
-];
-
-const DEFAULT_INCOME_CATEGORY: TransactionCategory = "counter-sale";
-
-export default function Incomes() {
+export default function Expenses() {
   const db = useSQLiteContext();
   const router = useRouter();
+  const { showAlert } = useAlertDialog();
   const [amount, setAmount] = useState("");
-  const [source, setSource] = useState("");
+  const [vendor, setVendor] = useState("");
   const [transactionDate, setTransactionDate] = useState(new Date());
   const [category, setCategory] = useState<TransactionCategory>(
-    DEFAULT_INCOME_CATEGORY,
+    DEFAULT_EXPENSE_CATEGORY,
   );
   const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState("");
 
-  const isFormValid = amount.length > 0 && source.trim().length > 0;
+  const isFormValid = amount.length > 0 && vendor.trim().length > 0;
 
   function resetForm() {
     setAmount("");
-    setSource("");
+    setVendor("");
     setTransactionDate(new Date());
-    setCategory(DEFAULT_INCOME_CATEGORY);
+    setCategory(DEFAULT_EXPENSE_CATEGORY);
     setNotes("");
   }
 
-  async function handleSaveIncome() {
+  async function handleSaveExpense() {
     if (!isFormValid || isSaving) {
       return;
     }
 
-    const selectedCategory = INCOME_CATEGORIES.find(
+    const selectedCategory = EXPENSE_CATEGORIES.find(
       (option) => option.value === category,
     );
 
@@ -61,25 +52,30 @@ export default function Incomes() {
 
     try {
       await createTransaction(db, {
-        amountInCents: parseCurrencyInputToCents(amount),
+        amountInCents: -parseCurrencyInputToCents(amount),
         category,
         counterparty: null,
         notes: notes.trim() || null,
         occurredAt: transactionDate.toISOString(),
-        title: source.trim(),
-        typeLabel: selectedCategory?.label ?? "Receita",
-        variant: "income",
+        title: vendor.trim(),
+        typeLabel: selectedCategory?.label ?? "Despesa",
+        variant: "expense",
       });
 
       resetForm();
-      Alert.alert(
-        "Entrada salva",
-        "A movimentação foi registrada no histórico.",
-      );
-      router.push("/history");
+      showAlert({
+        message: "A movimentação foi registrada no histórico.",
+        onClose: () => router.push("/history"),
+        title: "Despesa salva",
+        tone: "success",
+      });
     } catch (error) {
       console.error(error);
-      Alert.alert("Erro ao salvar", "Não foi possível salvar a entrada agora.");
+      showAlert({
+        message: "Não foi possível salvar a despesa agora.",
+        title: "Erro ao salvar",
+        tone: "error",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -91,21 +87,21 @@ export default function Incomes() {
       contentContainerClassName="px-6 pb-14 pt-10"
       showsVerticalScrollIndicator={false}
     >
-      <View className="mt-8 rounded-xl border-t-[3px] border-primary bg-white px-6 pb-6 pt-5">
+      <View className="mt-8 rounded-xl border-t-[3px] border-[#FFB49A] bg-white px-6 pb-6 pt-5">
         <Text className="font-inter-semibold text-sm uppercase tracking-[1.3px] text-text/75">
           Valor total
         </Text>
 
         <View className="mt-6 flex-row items-center gap-2">
-          <Text className="font-inter-semibold text-2xl text-primary">R$</Text>
+          <Text className="font-inter-semibold text-2xl text-tertiary">R$</Text>
           <TextInput
             className="flex-1 py-0 font-inter-medium text-2xl text-text"
-            cursorColor={colors.primary}
             keyboardType="number-pad"
             onChangeText={(value) => setAmount(formatCurrencyInput(value))}
             placeholder="0,00"
+            selectionColor={colors.tertiary}
+            cursorColor={colors.tertiary}
             placeholderTextColor="rgba(26, 28, 25, 0.14)"
-            selectionColor={colors.primary}
             style={{ height: 40, paddingVertical: 0 }}
             value={amount}
           />
@@ -114,12 +110,12 @@ export default function Incomes() {
 
       <View className="mt-8 gap-6">
         <InputField
-          label="Nome da entrada"
-          onChangeText={setSource}
-          selectionColor={colors.primary}
-          cursorColor={colors.primary}
-          placeholder="Ex: Venda do jantar executivo"
-          value={source}
+          label="Nome da despesa"
+          onChangeText={setVendor}
+          selectionColor={colors.tertiary}
+          cursorColor={colors.tertiary}
+          placeholder="Ex: Distribuidora de Frutos do Mar"
+          value={vendor}
         />
 
         <DatePickerField
@@ -130,19 +126,19 @@ export default function Incomes() {
         />
 
         <CategorySelector
-          label="Categorias"
+          label="Categoria de despesa"
           onChange={(value) => setCategory(value as TransactionCategory)}
-          options={INCOME_CATEGORIES}
+          options={EXPENSE_CATEGORIES}
           value={category}
         />
 
         <InputField
           label="Notas / Descrição"
           multiline
-          selectionColor={colors.primary}
-          cursorColor={colors.primary}
+          selectionColor={colors.tertiary}
+          cursorColor={colors.tertiary}
           onChangeText={setNotes}
-          placeholder="Forneça detalhes sobre esta entrada..."
+          placeholder="Forneça detalhes sobre este gasto..."
           value={notes}
         />
       </View>
@@ -151,8 +147,8 @@ export default function Incomes() {
         <PrimaryButton
           disabled={!isFormValid}
           isLoading={isSaving}
-          label="Salvar Entrada"
-          onPress={() => void handleSaveIncome()}
+          label="Salvar Despesa"
+          onPress={() => void handleSaveExpense()}
         />
       </View>
     </ScrollView>

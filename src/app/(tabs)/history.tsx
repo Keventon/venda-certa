@@ -1,4 +1,5 @@
 import { listTransactions } from "@/database";
+import { useAlertDialog } from "@/components/AlertDialog";
 import { CategorySelector } from "@/components/CategorySelector";
 import { Loading } from "@/components/Loading";
 import { TransactionCard } from "@/components/TransactionCard";
@@ -13,10 +14,11 @@ import {
   formatCurrencyFromCents,
   formatSignedCurrencyFromCents,
 } from "@/utils/currency";
+import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
-import { Alert, SectionList, Text, View } from "react-native";
+import { SectionList, Text, View } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 
 const PERIOD_OPTIONS: Array<{ label: string; value: HistoryPeriod }> = [
@@ -108,6 +110,8 @@ function SummaryStat({
 export default function History() {
   const db = useSQLiteContext();
   const isFocused = useIsFocused();
+  const router = useRouter();
+  const { showAlert } = useAlertDialog();
   const [period, setPeriod] = useState<HistoryPeriod>("7days");
   const [type, setType] = useState<HistoryType>("all");
   const [transactions, setTransactions] = useState<HistoryItem[]>([]);
@@ -135,10 +139,11 @@ export default function History() {
         console.error(error);
 
         if (isActive) {
-          Alert.alert(
-            "Erro ao carregar",
-            "Não foi possível carregar o histórico agora.",
-          );
+          showAlert({
+            message: "Não foi possível carregar o histórico agora.",
+            title: "Erro ao carregar",
+            tone: "error",
+          });
         }
       } finally {
         if (isActive) {
@@ -152,7 +157,7 @@ export default function History() {
     return () => {
       isActive = false;
     };
-  }, [db, isFocused, period, type]);
+  }, [db, isFocused, period, showAlert, type]);
 
   const incomeTotal = transactions
     .filter((transaction) => transaction.variant === "income")
@@ -284,6 +289,7 @@ export default function History() {
             amount={formatSignedCurrencyFromCents(item.amountInCents)}
             category={item.category}
             description={formatTransactionDescription(item)}
+            onPress={() => router.push(`/transactions/${item.id}`)}
             title={item.title}
             typeLabel={item.typeLabel}
             variant={item.variant}

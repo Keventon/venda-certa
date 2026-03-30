@@ -1,17 +1,19 @@
 import Abstract from "@/assets/abstract.svg";
-import { getDashboardSummary } from "@/database";
+import { useAlertDialog } from "@/components/AlertDialog";
 import { Loading } from "@/components/Loading";
 import { MetricCard } from "@/components/MetricCard";
 import { TransactionCard } from "@/components/TransactionCard";
+import { getDashboardSummary } from "@/database";
 import type { DashboardSummary, TransactionRecord } from "@/types/transactions";
 import {
   formatCurrencyFromCents,
   formatSignedCurrencyFromCents,
 } from "@/utils/currency";
 import { useIsFocused } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 function formatMetricChange(
   currentTotalInCents: number,
@@ -94,7 +96,8 @@ function formatRelativeTime(date: string) {
 }
 
 function formatTransactionDescription(transaction: TransactionRecord) {
-  const leadingText = transaction.counterparty ?? transaction.notes ?? "Sem detalhes";
+  const leadingText =
+    transaction.counterparty ?? transaction.notes ?? "Sem detalhes";
   const timeLabel = formatRelativeTime(transaction.occurredAt);
 
   return `${leadingText} • ${timeLabel}`;
@@ -103,6 +106,8 @@ function formatTransactionDescription(transaction: TransactionRecord) {
 export default function Index() {
   const db = useSQLiteContext();
   const isFocused = useIsFocused();
+  const router = useRouter();
+  const { showAlert } = useAlertDialog();
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -128,10 +133,11 @@ export default function Index() {
         console.error(error);
 
         if (isActive) {
-          Alert.alert(
-            "Erro ao carregar",
-            "Não foi possível carregar os dados da tela inicial.",
-          );
+          showAlert({
+            message: "Não foi possível carregar os dados da tela inicial.",
+            title: "Erro ao carregar",
+            tone: "error",
+          });
         }
       } finally {
         if (isActive) {
@@ -145,7 +151,7 @@ export default function Index() {
     return () => {
       isActive = false;
     };
-  }, [db, isFocused]);
+  }, [db, isFocused, showAlert]);
 
   if (!dashboard && isLoading) {
     return (
@@ -176,12 +182,6 @@ export default function Index() {
       contentContainerClassName="px-6 pb-12 pt-10"
       showsVerticalScrollIndicator={false}
     >
-      <View className="items-end">
-        <Text className="text-primary font-inter-semibold text-lg">
-          Venda Fácil
-        </Text>
-      </View>
-
       <View className="mt-8 overflow-hidden rounded-lg bg-primary px-6 pb-6 pt-7">
         <Abstract
           width={150}
@@ -250,6 +250,7 @@ export default function Index() {
               amount={formatSignedCurrencyFromCents(transaction.amountInCents)}
               category={transaction.category}
               description={formatTransactionDescription(transaction)}
+              onPress={() => router.push(`/transactions/${transaction.id}`)}
               title={transaction.title}
               typeLabel={transaction.typeLabel}
               variant={transaction.variant}

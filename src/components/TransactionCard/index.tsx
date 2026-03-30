@@ -4,12 +4,13 @@ import type {
   TransactionVariant,
 } from "@/types/transactions";
 import clsx from "clsx";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 type TransactionCardProps = {
   amount: string;
   category: TransactionCategory;
   description: string;
+  onPress?: () => void;
   title: string;
   typeLabel: string;
   variant: TransactionVariant;
@@ -60,6 +61,7 @@ export function TransactionCard({
   amount,
   category,
   description,
+  onPress,
   title,
   typeLabel,
   variant,
@@ -68,7 +70,14 @@ export function TransactionCard({
   const iconName = CATEGORY_ICONS[category] ?? "briefcase-check-outline";
 
   return (
-    <View className="rounded-lg bg-white px-4 py-4">
+    <Pressable
+      className="rounded-lg bg-white px-4 py-4"
+      disabled={!onPress}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        opacity: pressed && onPress ? 0.88 : 1,
+      })}
+    >
       <View className="flex-row items-center gap-3">
         <View
           className={clsx(
@@ -114,6 +123,6 @@ export function TransactionCard({
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }

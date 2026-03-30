@@ -33,6 +33,11 @@ const TABS: Record<TabRouteName, TabConfig> = {
 
 export function TabBar({ descriptors, navigation, state }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const activeRouteName = state.routes[state.index]?.name as TabRouteName;
+
+  if (!TABS[activeRouteName]) {
+    return null;
+  }
 
   return (
     <View
