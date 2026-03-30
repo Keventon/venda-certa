@@ -1,3 +1,4 @@
+import { useIsFocused } from "@react-navigation/native";
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, type StyleProp, type ViewStyle } from "react-native";
@@ -19,11 +20,24 @@ export function AnimatedEntrance({
   scaleFrom = 0.985,
   style,
 }: AnimatedEntranceProps) {
+  const isFocused = useIsFocused();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(distance)).current;
   const scale = useRef(new Animated.Value(scaleFrom)).current;
 
   useEffect(() => {
+    if (!isFocused) {
+      return;
+    }
+
+    opacity.stopAnimation();
+    translateY.stopAnimation();
+    scale.stopAnimation();
+
+    opacity.setValue(0);
+    translateY.setValue(distance);
+    scale.setValue(scaleFrom);
+
     const animation = Animated.parallel([
       Animated.timing(opacity, {
         delay,
@@ -53,7 +67,16 @@ export function AnimatedEntrance({
     return () => {
       animation.stop();
     };
-  }, [delay, distance, duration, opacity, scale, scaleFrom, translateY]);
+  }, [
+    delay,
+    distance,
+    duration,
+    isFocused,
+    opacity,
+    scale,
+    scaleFrom,
+    translateY,
+  ]);
 
   return (
     <Animated.View

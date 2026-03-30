@@ -92,7 +92,7 @@ export default function Incomes() {
       showsVerticalScrollIndicator={false}
     >
       <AnimatedEntrance delay={40}>
-        <View className="mt-8 rounded-xl border-t-[3px] border-primary bg-white px-6 pb-6 pt-5">
+        <View className="mt-8 rounded-xl border-t-[3px] border-primary bg-white px-6 pb-6 pt-5 shadow-sm">
           <Text className="font-inter-semibold text-sm uppercase tracking-[1.3px] text-text/75">
             Valor total
           </Text>

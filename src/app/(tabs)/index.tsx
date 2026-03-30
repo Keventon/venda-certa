@@ -240,7 +240,7 @@ export default function Index() {
         </View>
       </AnimatedEntrance>
 
-      <View className="mt-4 gap-4">
+      <View className="mt-4 gap-3">
         {summary.recentTransactions.length === 0 ? (
           <AnimatedEntrance delay={280}>
             <View className="rounded-lg bg-white px-5 py-5">

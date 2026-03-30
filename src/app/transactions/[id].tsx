@@ -226,7 +226,7 @@ export default function TransactionDetails() {
 
         <AnimatedEntrance delay={120}>
           <View className="mt-6 rounded-lg bg-white px-6 py-6">
-            <Text className="font-inter-semibold text-base ml-2 text-text/75">
+            <Text className="font-inter-semibold text-sm ml-2 text-text/75">
               Resumo da movimentação
             </Text>
 

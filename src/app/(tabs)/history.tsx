@@ -247,7 +247,7 @@ export default function History() {
           </AnimatedEntrance>
 
           <AnimatedEntrance delay={110}>
-            <View className="mt-7 rounded-lg bg-white px-5 py-5">
+            <View className="mt-7 rounded-lg bg-white px-5 py-5 shadow-sm">
               <Text className="font-inter-semibold text-[10px] uppercase tracking-[1.3px] text-text/75">
                 Resumo do período
               </Text>
@@ -293,7 +293,7 @@ export default function History() {
         </View>
       }
       renderItem={({ item, index, section }) => (
-        <View className={index === section.data.length - 1 ? "" : "mb-3"}>
+        <View className={index === section.data.length - 1 ? "" : "mb-2"}>
           <TransactionCard
             amount={formatSignedCurrencyFromCents(item.amountInCents)}
             category={item.category}
@@ -307,18 +307,18 @@ export default function History() {
         </View>
       )}
       renderSectionHeader={({ section }) => (
-        <View className="mb-3 flex-row items-end justify-between">
-          <Text className="font-inter-semibold text-sm text-text">
+        <View className="mb-2 flex-row items-end justify-between">
+          <Text className="font-inter-semibold ms-2 text-sm text-text">
             {section.title}
           </Text>
 
-          <Text className="font-inter-regular text-sm tracking-[0.8px] text-text/55">
+          <Text className="font-inter-regular mr-2 text-sm tracking-[0.8px] text-text/55">
             {section.countLabel}
           </Text>
         </View>
       )}
       sections={sections}
-      SectionSeparatorComponent={() => <View className="h-6" />}
+      SectionSeparatorComponent={() => <View className="h-4" />}
       showsVerticalScrollIndicator={false}
       stickySectionHeadersEnabled={false}
     />
