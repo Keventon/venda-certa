@@ -32,7 +32,6 @@ export default function Incomes() {
     DEFAULT_INCOME_CATEGORY,
   );
   const [isSaving, setIsSaving] = useState(false);
-  const [notes, setNotes] = useState("");
 
   const isAmountValid = hasPositiveCurrencyInput(amount);
   const isFormValid = isAmountValid && source.trim().length > 0;
@@ -42,7 +41,6 @@ export default function Incomes() {
     setSource("");
     setTransactionDate(new Date());
     setCategory(DEFAULT_INCOME_CATEGORY);
-    setNotes("");
   }
 
   async function handleSaveIncome() {
@@ -74,7 +72,7 @@ export default function Incomes() {
         amountInCents: parseCurrencyInputToCents(amount),
         category,
         counterparty: null,
-        notes: notes.trim() || null,
+        notes: null,
         occurredAt: transactionDate.toISOString(),
         title: source.trim(),
         typeLabel: selectedCategory?.label ?? "Receita",
@@ -152,16 +150,6 @@ export default function Incomes() {
             onChange={(value) => setCategory(value as TransactionCategory)}
             options={INCOME_CATEGORIES}
             value={category}
-          />
-
-          <InputField
-            label="Notas / Descrição"
-            multiline
-            selectionColor={colors.primary}
-            cursorColor={colors.primary}
-            onChangeText={setNotes}
-            placeholder="Forneça detalhes sobre esta entrada..."
-            value={notes}
           />
         </View>
       </AnimatedEntrance>

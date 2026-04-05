@@ -24,6 +24,7 @@ type TransactionRow = {
 };
 
 export type ListTransactionsOptions = {
+  monthDate?: string;
   period: HistoryPeriod;
   type: HistoryType;
 };
@@ -38,7 +39,11 @@ function startOfDay(date: Date) {
   return value;
 }
 
-function getPeriodRange(period: HistoryPeriod) {
+function getPeriodRange(period: HistoryPeriod, monthDate?: string) {
+  const monthReference =
+    monthDate && !Number.isNaN(new Date(monthDate).getTime())
+      ? new Date(monthDate)
+      : new Date();
   const today = startOfDay(new Date());
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -60,8 +65,16 @@ function getPeriodRange(period: HistoryPeriod) {
     };
   }
 
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  const monthStart = new Date(
+    monthReference.getFullYear(),
+    monthReference.getMonth(),
+    1,
+  );
+  const nextMonthStart = new Date(
+    monthReference.getFullYear(),
+    monthReference.getMonth() + 1,
+    1,
+  );
 
   return {
     endAt: nextMonthStart.toISOString(),
@@ -167,6 +180,7 @@ export async function createTransaction(
     ...input,
     createdAt: now,
     id: input.id ?? generateTransactionId(),
+    notes: null,
     updatedAt: now,
   };
 
@@ -250,6 +264,10 @@ export async function updateTransaction(
     updatedAt: new Date().toISOString(),
   };
 
+  if (Object.prototype.hasOwnProperty.call(input, "notes")) {
+    updated.notes = null;
+  }
+
   assertNonZeroAmount(updated.amountInCents);
 
   await db.runAsync(
@@ -290,9 +308,9 @@ export async function deleteTransaction(db: SQLiteDatabase, id: string) {
 
 export async function listTransactions(
   db: SQLiteDatabase,
-  { period, type }: ListTransactionsOptions,
+  { monthDate, period, type }: ListTransactionsOptions,
 ) {
-  const { endAt, startAt } = getPeriodRange(period);
+  const { endAt, startAt } = getPeriodRange(period, monthDate);
   const params: Array<string> = [startAt, endAt];
 
   let query = `
@@ -393,7 +411,7 @@ export async function getDashboardSummary(
       previousMonth.endAt,
       "expense",
     ),
-    listRecentTransactions(db, 3),
+    listRecentTransactions(db, 6),
   ]);
 
   const currentIncome = currentIncomeSigned;

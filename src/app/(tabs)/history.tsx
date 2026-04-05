@@ -2,6 +2,7 @@ import { useAlertDialog } from "@/components/AlertDialog";
 import { AnimatedEntrance } from "@/components/AnimatedEntrance";
 import { CategorySelector } from "@/components/CategorySelector";
 import { Loading } from "@/components/Loading";
+import { MonthNavigator } from "@/components/MonthNavigator";
 import { TransactionCard } from "@/components/TransactionCard";
 import { listTransactions } from "@/database";
 import type {
@@ -33,6 +34,10 @@ const TYPE_OPTIONS: Array<{ label: string; value: HistoryType }> = [
   { label: "Entradas", value: "income" },
   { label: "Despesas", value: "expense" },
 ];
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
 
 function startOfDay(date: Date) {
   const value = new Date(date);
@@ -67,14 +72,33 @@ function formatSectionTitle(date: Date) {
   }).format(date);
 }
 
-function formatTransactionDescription(transaction: HistoryItem) {
-  const parts = [transaction.counterparty, transaction.notes].filter(Boolean);
+function formatSelectedMonth(date: Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
 
-  if (parts.length === 0) {
-    return "Sem detalhes";
+function formatSummaryTitle(period: HistoryPeriod, selectedMonth: Date) {
+  if (period !== "month") {
+    return "Resumo do período";
   }
 
-  return parts.join(" • ");
+  return `Resumo de ${formatSelectedMonth(selectedMonth)}`;
+}
+
+function formatTransactionDescription(transaction: HistoryItem) {
+  const counterparty = transaction.counterparty?.trim();
+  const occurredTime = new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(transaction.occurredAt));
+
+  if (counterparty) {
+    return `${counterparty} • ${occurredTime}`;
+  }
+
+  return `Registrada às ${occurredTime}`;
 }
 
 function SummaryStat({
@@ -115,6 +139,9 @@ export default function History() {
   const { showAlert } = useAlertDialog();
   const [period, setPeriod] = useState<HistoryPeriod>("7days");
   const [type, setType] = useState<HistoryType>("all");
+  const [selectedMonth, setSelectedMonth] = useState(() =>
+    startOfMonth(new Date()),
+  );
   const [transactions, setTransactions] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -129,7 +156,12 @@ export default function History() {
       setIsLoading(true);
 
       try {
-        const result = await listTransactions(db, { period, type });
+        const result = await listTransactions(db, {
+          monthDate:
+            period === "month" ? startOfMonth(selectedMonth).toISOString() : undefined,
+          period,
+          type,
+        });
 
         if (!isActive) {
           return;
@@ -158,7 +190,7 @@ export default function History() {
     return () => {
       isActive = false;
     };
-  }, [db, isFocused, period, showAlert, type]);
+  }, [db, isFocused, period, selectedMonth, showAlert, type]);
 
   const incomeTotal = transactions
     .filter((transaction) => transaction.variant === "income")
@@ -237,6 +269,13 @@ export default function History() {
                 value={period}
               />
 
+              {period === "month" ? (
+                <MonthNavigator
+                  onChange={setSelectedMonth}
+                  value={selectedMonth}
+                />
+              ) : null}
+
               <CategorySelector
                 label="Mostrar"
                 onChange={(value) => setType(value as HistoryType)}
@@ -249,7 +288,7 @@ export default function History() {
           <AnimatedEntrance delay={110}>
             <View className="mt-7 rounded-lg bg-white px-5 py-5">
               <Text className="font-inter-semibold text-[10px] uppercase tracking-[1.3px] text-text/75">
-                Resumo do período
+                {formatSummaryTitle(period, selectedMonth)}
               </Text>
 
               <View className="mt-4 flex-row items-end justify-between gap-3">

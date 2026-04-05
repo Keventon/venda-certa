@@ -32,7 +32,6 @@ export default function Expenses() {
     DEFAULT_EXPENSE_CATEGORY,
   );
   const [isSaving, setIsSaving] = useState(false);
-  const [notes, setNotes] = useState("");
 
   const isAmountValid = hasPositiveCurrencyInput(amount);
   const isFormValid = isAmountValid && vendor.trim().length > 0;
@@ -42,7 +41,6 @@ export default function Expenses() {
     setVendor("");
     setTransactionDate(new Date());
     setCategory(DEFAULT_EXPENSE_CATEGORY);
-    setNotes("");
   }
 
   async function handleSaveExpense() {
@@ -74,7 +72,7 @@ export default function Expenses() {
         amountInCents: -parseCurrencyInputToCents(amount),
         category,
         counterparty: null,
-        notes: notes.trim() || null,
+        notes: null,
         occurredAt: transactionDate.toISOString(),
         title: vendor.trim(),
         typeLabel: selectedCategory?.label ?? "Despesa",
@@ -152,16 +150,6 @@ export default function Expenses() {
             onChange={(value) => setCategory(value as TransactionCategory)}
             options={EXPENSE_CATEGORIES}
             value={category}
-          />
-
-          <InputField
-            label="Notas / Descrição"
-            multiline
-            selectionColor={colors.tertiary}
-            cursorColor={colors.tertiary}
-            onChangeText={setNotes}
-            placeholder="Forneça detalhes sobre este gasto..."
-            value={notes}
           />
         </View>
       </AnimatedEntrance>

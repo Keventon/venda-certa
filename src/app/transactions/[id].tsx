@@ -247,14 +247,6 @@ export default function TransactionDetails() {
                 label="Última atualização"
                 value={formatDisplayDateTime(transaction.updatedAt)}
               />
-              <SummaryField
-                isMuted={!transaction.notes?.trim()}
-                label="Notas / descrição"
-                value={
-                  transaction.notes?.trim() ||
-                  "Nenhuma observação registrada para essa movimentação."
-                }
-              />
             </View>
           </View>
         </AnimatedEntrance>

@@ -5,6 +5,7 @@ import { Loading } from "@/components/Loading";
 import { MetricCard } from "@/components/MetricCard";
 import { TransactionCard } from "@/components/TransactionCard";
 import { getDashboardSummary } from "@/database";
+import { usePressScale } from "@/hooks/usePressScale";
 import type { DashboardSummary, TransactionRecord } from "@/types/transactions";
 import {
   formatCurrencyFromCents,
@@ -14,7 +15,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Animated, Pressable, ScrollView, Text, View } from "react-native";
 
 function formatMetricChange(
   currentTotalInCents: number,
@@ -97,8 +98,7 @@ function formatRelativeTime(date: string) {
 }
 
 function formatTransactionDescription(transaction: TransactionRecord) {
-  const leadingText =
-    transaction.counterparty ?? transaction.notes ?? "Sem detalhes";
+  const leadingText = transaction.counterparty ?? "Movimentação registrada";
   const timeLabel = formatRelativeTime(transaction.occurredAt);
 
   return `${leadingText} • ${timeLabel}`;
@@ -109,6 +109,13 @@ export default function Index() {
   const isFocused = useIsFocused();
   const router = useRouter();
   const { showAlert } = useAlertDialog();
+  const {
+    animatedStyle: historyButtonAnimatedStyle,
+    onPressIn: onHistoryButtonPressIn,
+    onPressOut: onHistoryButtonPressOut,
+  } = usePressScale({
+    pressedScale: 0.97,
+  });
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -233,10 +240,26 @@ export default function Index() {
       </View>
 
       <AnimatedEntrance delay={230}>
-        <View className="mt-6">
+        <View className="mt-6 flex-row items-center justify-between">
           <Text className="text-text text-sm font-inter-medium">
             Transações recentes
           </Text>
+
+          <Animated.View style={historyButtonAnimatedStyle}>
+            <Pressable
+              className="rounded-full bg-white px-4 py-2"
+              onPress={() => router.push("/history")}
+              onPressIn={onHistoryButtonPressIn}
+              onPressOut={onHistoryButtonPressOut}
+              style={({ pressed }) => ({
+                opacity: pressed ? 0.84 : 1,
+              })}
+            >
+              <Text className="font-inter-medium text-xs uppercase tracking-[0.7px] text-primary">
+                Ver todas
+              </Text>
+            </Pressable>
+          </Animated.View>
         </View>
       </AnimatedEntrance>
 

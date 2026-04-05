@@ -59,6 +59,7 @@ export type HistorySection = SectionListSection<HistoryItem> & {
 };
 
 export type HistoryFilters = {
+  monthDate?: string;
   period: HistoryPeriod;
   type: HistoryType;
 };

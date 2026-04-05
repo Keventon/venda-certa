@@ -47,7 +47,6 @@ const VARIANT_COPY: Record<
     saveLabel: string;
     screenTitle: string;
     typeLabel: string;
-    notesPlaceholder: string;
   }
 > = {
   expense: {
@@ -58,7 +57,6 @@ const VARIANT_COPY: Record<
     dateAccentColor: colors.primary,
     fieldLabel: "Nome da despesa",
     fieldPlaceholder: "Ex: Distribuidora de Frutos do Mar",
-    notesPlaceholder: "Forneça detalhes sobre este gasto...",
     saveLabel: "Salvar Despesa",
     screenTitle: "Editar despesa",
     typeLabel: "Despesa",
@@ -71,7 +69,6 @@ const VARIANT_COPY: Record<
     dateAccentColor: colors.primary,
     fieldLabel: "Nome da entrada",
     fieldPlaceholder: "Ex: Venda do jantar executivo",
-    notesPlaceholder: "Forneça detalhes sobre esta entrada...",
     saveLabel: "Salvar Receita",
     screenTitle: "Editar receita",
     typeLabel: "Receita",
@@ -102,7 +99,6 @@ export default function TransactionEditScreen() {
   const [category, setCategory] = useState<TransactionCategory>(
     DEFAULT_EXPENSE_CATEGORY,
   );
-  const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -112,7 +108,6 @@ export default function TransactionEditScreen() {
     setAmount(formatCurrencyInputFromCents(record.amountInCents));
     setTransactionDate(new Date(record.occurredAt));
     setCategory(record.category);
-    setNotes(record.notes ?? "");
   }
 
   useEffect(() => {
@@ -262,7 +257,6 @@ export default function TransactionEditScreen() {
       await updateTransaction(db, transactionId, {
         amountInCents,
         category,
-        notes: notes.trim() || null,
         occurredAt: transactionDate.toISOString(),
         title: title.trim(),
         typeLabel: getCategoryLabel(currentTransaction.variant, category),
@@ -409,16 +403,6 @@ export default function TransactionEditScreen() {
               onChange={(value) => setCategory(value as TransactionCategory)}
               options={categoryOptions}
               value={category}
-            />
-
-            <InputField
-              cursorColor={copy.accentColor}
-              label="Notas / Descrição"
-              multiline
-              onChangeText={setNotes}
-              placeholder={copy.notesPlaceholder}
-              selectionColor={copy.accentColor}
-              value={notes}
             />
           </View>
         </AnimatedEntrance>
