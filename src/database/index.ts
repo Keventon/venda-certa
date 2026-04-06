@@ -1,5 +1,10 @@
 export { DATABASE_NAME, migrateDatabaseIfNeeded } from "@/database/migrations";
 export {
+  getStoredActiveBusinessId,
+  listBusinesses,
+  storeActiveBusinessId,
+} from "@/database/businesses";
+export {
   createTransaction,
   deleteTransaction,
   getDashboardSummary,

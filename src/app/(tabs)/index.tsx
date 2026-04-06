@@ -1,11 +1,13 @@
 import Abstract from "@/assets/abstract.svg";
 import { useAlertDialog } from "@/components/AlertDialog";
 import { AnimatedEntrance } from "@/components/AnimatedEntrance";
+import { BusinessSwitcher } from "@/components/BusinessSwitcher";
 import { Loading } from "@/components/Loading";
 import { MetricCard } from "@/components/MetricCard";
 import { TransactionCard } from "@/components/TransactionCard";
 import { getDashboardSummary } from "@/database";
 import { usePressScale } from "@/hooks/usePressScale";
+import { useBusiness } from "@/providers/BusinessProvider";
 import type { DashboardSummary, TransactionRecord } from "@/types/transactions";
 import {
   formatCurrencyFromCents,
@@ -109,6 +111,7 @@ export default function Index() {
   const isFocused = useIsFocused();
   const router = useRouter();
   const { showAlert } = useAlertDialog();
+  const { activeBusiness, businesses, setActiveBusinessId } = useBusiness();
   const {
     animatedStyle: historyButtonAnimatedStyle,
     onPressIn: onHistoryButtonPressIn,
@@ -130,7 +133,7 @@ export default function Index() {
       setIsLoading(true);
 
       try {
-        const summary = await getDashboardSummary(db);
+        const summary = await getDashboardSummary(db, activeBusiness.id);
 
         if (!isActive) {
           return;
@@ -159,7 +162,7 @@ export default function Index() {
     return () => {
       isActive = false;
     };
-  }, [db, isFocused, showAlert]);
+  }, [activeBusiness.id, db, isFocused, showAlert]);
 
   if (!dashboard && isLoading) {
     return (
@@ -190,8 +193,20 @@ export default function Index() {
       contentContainerClassName="px-6 pb-12 pt-10"
       showsVerticalScrollIndicator={false}
     >
-      <AnimatedEntrance delay={30}>
-        <View className="mt-8 overflow-hidden rounded-lg bg-primary px-6 pb-6 pt-7">
+      <AnimatedEntrance delay={20}>
+        <View className="mt-4">
+          <BusinessSwitcher
+            businesses={businesses}
+            onChange={(businessId) => {
+              void setActiveBusinessId(businessId);
+            }}
+            value={activeBusiness.id}
+          />
+        </View>
+      </AnimatedEntrance>
+
+      <AnimatedEntrance delay={50}>
+        <View className="mt-6 overflow-hidden rounded-lg bg-primary px-6 pb-6 pt-7">
           <Abstract
             width={150}
             height={150}
@@ -271,7 +286,7 @@ export default function Index() {
                 Nenhuma transação cadastrada
               </Text>
               <Text className="mt-2 font-inter-regular text-sm leading-5 text-text/65">
-                As movimentações salvas em receita e despesa aparecerão aqui.
+                As movimentações salvas para a loja ativa aparecerão aqui.
               </Text>
             </View>
           </AnimatedEntrance>

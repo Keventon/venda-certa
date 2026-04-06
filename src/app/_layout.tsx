@@ -1,5 +1,6 @@
 import { AlertDialogProvider } from "@/components/AlertDialog";
 import { DATABASE_NAME, migrateDatabaseIfNeeded } from "@/database";
+import { BusinessProvider } from "@/providers/BusinessProvider";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
@@ -41,13 +42,15 @@ export default function RootLayout() {
         databaseName={DATABASE_NAME}
         onInit={migrateDatabaseIfNeeded}
       >
-        <AlertDialogProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="transactions/[id]" />
-            <Stack.Screen name="transaction-edit/[id]" />
-          </Stack>
-        </AlertDialogProvider>
+        <BusinessProvider>
+          <AlertDialogProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="transactions/[id]" />
+              <Stack.Screen name="transaction-edit/[id]" />
+            </Stack>
+          </AlertDialogProvider>
+        </BusinessProvider>
       </SQLiteProvider>
     </>
   );

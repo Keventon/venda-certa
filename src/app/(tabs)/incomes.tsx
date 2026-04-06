@@ -5,10 +5,11 @@ import { DatePickerField } from "@/components/DatePickerField";
 import { InputField } from "@/components/InputField";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import {
-  DEFAULT_INCOME_CATEGORY,
-  INCOME_CATEGORIES,
+  getCategoryOptionsByVariant,
+  getDefaultCategory,
 } from "@/constants/transactionCategories";
 import { createTransaction } from "@/database";
+import { useBusiness } from "@/providers/BusinessProvider";
 import { colors } from "@/styles/colors";
 import type { TransactionCategory } from "@/types/transactions";
 import {
@@ -18,20 +19,22 @@ import {
 } from "@/utils/currency";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, Text, TextInput, View } from "react-native";
 
 export default function Incomes() {
   const db = useSQLiteContext();
   const router = useRouter();
   const { showAlert } = useAlertDialog();
+  const { activeBusiness } = useBusiness();
   const [amount, setAmount] = useState("");
   const [source, setSource] = useState("");
   const [transactionDate, setTransactionDate] = useState(new Date());
   const [category, setCategory] = useState<TransactionCategory>(
-    DEFAULT_INCOME_CATEGORY,
+    getDefaultCategory(activeBusiness.id, "income"),
   );
   const [isSaving, setIsSaving] = useState(false);
+  const incomeCategories = getCategoryOptionsByVariant(activeBusiness.id, "income");
 
   const isAmountValid = hasPositiveCurrencyInput(amount);
   const isFormValid = isAmountValid && source.trim().length > 0;
@@ -40,8 +43,12 @@ export default function Incomes() {
     setAmount("");
     setSource("");
     setTransactionDate(new Date());
-    setCategory(DEFAULT_INCOME_CATEGORY);
+    setCategory(getDefaultCategory(activeBusiness.id, "income"));
   }
+
+  useEffect(() => {
+    resetForm();
+  }, [activeBusiness.id]);
 
   async function handleSaveIncome() {
     if (isSaving) {
@@ -61,7 +68,7 @@ export default function Incomes() {
       return;
     }
 
-    const selectedCategory = INCOME_CATEGORIES.find(
+    const selectedCategory = incomeCategories.find(
       (option) => option.value === category,
     );
 
@@ -70,6 +77,7 @@ export default function Incomes() {
     try {
       await createTransaction(db, {
         amountInCents: parseCurrencyInputToCents(amount),
+        businessId: activeBusiness.id,
         category,
         counterparty: null,
         notes: null,
@@ -81,7 +89,7 @@ export default function Incomes() {
 
       resetForm();
       showAlert({
-        message: "A movimentação foi registrada no histórico.",
+        message: `A movimentação foi registrada em ${activeBusiness.name}.`,
         onClose: () => router.push("/history"),
         title: "Entrada salva",
         tone: "success",
@@ -148,7 +156,7 @@ export default function Incomes() {
           <CategorySelector
             label="Categorias"
             onChange={(value) => setCategory(value as TransactionCategory)}
-            options={INCOME_CATEGORIES}
+            options={incomeCategories}
             value={category}
           />
         </View>

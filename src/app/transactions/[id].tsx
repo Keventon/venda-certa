@@ -4,6 +4,7 @@ import { Loading } from "@/components/Loading";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { SummaryField } from "@/components/SummaryField";
+import { getBusinessName } from "@/constants/businesses";
 import { getCategoryLabel } from "@/constants/transactionCategories";
 import { getTransactionById } from "@/database";
 import type {
@@ -233,8 +234,13 @@ export default function TransactionDetails() {
             <View className="mt-5 gap-3">
               <SummaryField label="Descrição" value={transaction.title} />
               <SummaryField
+                label="Negócio"
+                value={getBusinessName(transaction.businessId)}
+              />
+              <SummaryField
                 label="Categoria"
                 value={getCategoryLabel(
+                  transaction.businessId,
                   transaction.variant,
                   transaction.category,
                 )}

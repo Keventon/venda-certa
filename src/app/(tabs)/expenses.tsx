@@ -6,9 +6,10 @@ import { DatePickerField } from "@/components/DatePickerField";
 import { InputField } from "@/components/InputField";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import {
-  DEFAULT_EXPENSE_CATEGORY,
-  EXPENSE_CATEGORIES,
+  getCategoryOptionsByVariant,
+  getDefaultCategory,
 } from "@/constants/transactionCategories";
+import { useBusiness } from "@/providers/BusinessProvider";
 import { colors } from "@/styles/colors";
 import type { TransactionCategory } from "@/types/transactions";
 import {
@@ -18,20 +19,25 @@ import {
 } from "@/utils/currency";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, Text, TextInput, View } from "react-native";
 
 export default function Expenses() {
   const db = useSQLiteContext();
   const router = useRouter();
   const { showAlert } = useAlertDialog();
+  const { activeBusiness } = useBusiness();
   const [amount, setAmount] = useState("");
   const [vendor, setVendor] = useState("");
   const [transactionDate, setTransactionDate] = useState(new Date());
   const [category, setCategory] = useState<TransactionCategory>(
-    DEFAULT_EXPENSE_CATEGORY,
+    getDefaultCategory(activeBusiness.id, "expense"),
   );
   const [isSaving, setIsSaving] = useState(false);
+  const expenseCategories = getCategoryOptionsByVariant(
+    activeBusiness.id,
+    "expense",
+  );
 
   const isAmountValid = hasPositiveCurrencyInput(amount);
   const isFormValid = isAmountValid && vendor.trim().length > 0;
@@ -40,8 +46,12 @@ export default function Expenses() {
     setAmount("");
     setVendor("");
     setTransactionDate(new Date());
-    setCategory(DEFAULT_EXPENSE_CATEGORY);
+    setCategory(getDefaultCategory(activeBusiness.id, "expense"));
   }
+
+  useEffect(() => {
+    resetForm();
+  }, [activeBusiness.id]);
 
   async function handleSaveExpense() {
     if (isSaving) {
@@ -61,7 +71,7 @@ export default function Expenses() {
       return;
     }
 
-    const selectedCategory = EXPENSE_CATEGORIES.find(
+    const selectedCategory = expenseCategories.find(
       (option) => option.value === category,
     );
 
@@ -70,6 +80,7 @@ export default function Expenses() {
     try {
       await createTransaction(db, {
         amountInCents: -parseCurrencyInputToCents(amount),
+        businessId: activeBusiness.id,
         category,
         counterparty: null,
         notes: null,
@@ -81,7 +92,7 @@ export default function Expenses() {
 
       resetForm();
       showAlert({
-        message: "A movimentação foi registrada no histórico.",
+        message: `A movimentação foi registrada em ${activeBusiness.name}.`,
         onClose: () => router.push("/history"),
         title: "Despesa salva",
         tone: "success",
@@ -148,7 +159,7 @@ export default function Expenses() {
           <CategorySelector
             label="Categoria de despesa"
             onChange={(value) => setCategory(value as TransactionCategory)}
-            options={EXPENSE_CATEGORIES}
+            options={expenseCategories}
             value={category}
           />
         </View>

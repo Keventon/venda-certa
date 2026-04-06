@@ -46,16 +46,21 @@ const CATEGORY_ICONS: Record<
   string,
   React.ComponentProps<typeof MaterialCommunityIcons>["name"]
 > = {
+  accessories: "paw",
   bills: "briefcase-check-outline",
+  cleaning: "spray-bottle",
   "counter-sale": "storefront-outline",
   delivery: "bike-fast",
   event: "calendar-star",
   food: "silverware-fork-knife",
   ingredients: "food-apple-outline",
   logistics: "truck-delivery-outline",
+  medicine: "pill",
   other: "dots-grid",
   packaging: "package-variant-closed",
+  "pet-food": "food-variant",
   sales: "cash-register",
+  stock: "package-variant-closed",
   subscription: "calendar-star",
   utilities: "lightning-bolt-outline",
 };

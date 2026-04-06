@@ -1,3 +1,5 @@
+import { DEFAULT_BUSINESS_ID } from "@/constants/businesses";
+import type { BusinessId } from "@/types/business";
 import type {
   CreateTransactionInput,
   DashboardSummary,
@@ -11,6 +13,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 type TransactionRow = {
   amount_in_cents: number;
+  business_id: BusinessId | null;
   category: TransactionRecord["category"];
   counterparty: string | null;
   created_at: string;
@@ -24,6 +27,7 @@ type TransactionRow = {
 };
 
 export type ListTransactionsOptions = {
+  businessId: BusinessId;
   monthDate?: string;
   period: HistoryPeriod;
   type: HistoryType;
@@ -117,6 +121,7 @@ function assertNonZeroAmount(amountInCents: number) {
 function mapRowToTransaction(row: TransactionRow): TransactionRecord {
   return {
     amountInCents: row.amount_in_cents,
+    businessId: row.business_id ?? DEFAULT_BUSINESS_ID,
     category: row.category,
     counterparty: row.counterparty,
     createdAt: row.created_at,
@@ -134,6 +139,7 @@ async function getSignedSum(
   db: SQLiteDatabase,
   startAt: string,
   endAt: string,
+  businessId: BusinessId,
   variant?: TransactionVariant,
 ) {
   if (variant) {
@@ -141,9 +147,9 @@ async function getSignedSum(
       `
         SELECT COALESCE(SUM(amount_in_cents), 0) AS total
         FROM transactions
-        WHERE occurred_at >= ? AND occurred_at < ? AND variant = ?
+        WHERE business_id = ? AND occurred_at >= ? AND occurred_at < ? AND variant = ?
       `,
-      [startAt, endAt, variant],
+      [businessId, startAt, endAt, variant],
     );
 
     return row?.total ?? 0;
@@ -153,9 +159,9 @@ async function getSignedSum(
     `
       SELECT COALESCE(SUM(amount_in_cents), 0) AS total
       FROM transactions
-      WHERE occurred_at >= ? AND occurred_at < ?
+      WHERE business_id = ? AND occurred_at >= ? AND occurred_at < ?
     `,
-    [startAt, endAt],
+    [businessId, startAt, endAt],
   );
 
   return row?.total ?? 0;
@@ -188,6 +194,7 @@ export async function createTransaction(
     `
       INSERT INTO transactions (
         id,
+        business_id,
         title,
         type_label,
         variant,
@@ -199,10 +206,11 @@ export async function createTransaction(
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       transaction.id,
+      transaction.businessId,
       transaction.title,
       transaction.typeLabel,
       transaction.variant,
@@ -224,6 +232,7 @@ export async function getTransactionById(db: SQLiteDatabase, id: string) {
     `
       SELECT
         id,
+        business_id,
         title,
         type_label,
         variant,
@@ -274,6 +283,7 @@ export async function updateTransaction(
     `
       UPDATE transactions
       SET
+        business_id = ?,
         title = ?,
         type_label = ?,
         variant = ?,
@@ -286,6 +296,7 @@ export async function updateTransaction(
       WHERE id = ?
     `,
     [
+      updated.businessId,
       updated.title,
       updated.typeLabel,
       updated.variant,
@@ -308,14 +319,15 @@ export async function deleteTransaction(db: SQLiteDatabase, id: string) {
 
 export async function listTransactions(
   db: SQLiteDatabase,
-  { monthDate, period, type }: ListTransactionsOptions,
+  { businessId, monthDate, period, type }: ListTransactionsOptions,
 ) {
   const { endAt, startAt } = getPeriodRange(period, monthDate);
-  const params: Array<string> = [startAt, endAt];
+  const params: Array<string> = [businessId, startAt, endAt];
 
   let query = `
     SELECT
       id,
+      business_id,
       title,
       type_label,
       variant,
@@ -327,7 +339,7 @@ export async function listTransactions(
       created_at,
       updated_at
     FROM transactions
-    WHERE occurred_at >= ? AND occurred_at < ?
+    WHERE business_id = ? AND occurred_at >= ? AND occurred_at < ?
   `;
 
   if (type !== "all") {
@@ -344,12 +356,14 @@ export async function listTransactions(
 
 export async function listRecentTransactions(
   db: SQLiteDatabase,
+  businessId: BusinessId,
   limit = 3,
 ) {
   const rows = await db.getAllAsync<TransactionRow>(
     `
       SELECT
         id,
+        business_id,
         title,
         type_label,
         variant,
@@ -361,10 +375,11 @@ export async function listRecentTransactions(
         created_at,
         updated_at
       FROM transactions
+      WHERE business_id = ?
       ORDER BY occurred_at DESC
       LIMIT ?
     `,
-    [limit],
+    [businessId, limit],
   );
 
   return rows.map(mapRowToTransaction);
@@ -372,6 +387,7 @@ export async function listRecentTransactions(
 
 export async function getDashboardSummary(
   db: SQLiteDatabase,
+  businessId: BusinessId,
 ): Promise<DashboardSummary> {
   const currentMonth = getMonthRange(0);
   const previousMonth = getMonthRange(-1);
@@ -385,33 +401,42 @@ export async function getDashboardSummary(
     recentTransactions,
   ] = await Promise.all([
     db.getFirstAsync<SumRow>(
-      "SELECT COALESCE(SUM(amount_in_cents), 0) AS total FROM transactions",
+      `
+        SELECT COALESCE(SUM(amount_in_cents), 0) AS total
+        FROM transactions
+        WHERE business_id = ?
+      `,
+      [businessId],
     ),
     getSignedSum(
       db,
       currentMonth.startAt,
       currentMonth.endAt,
+      businessId,
       "income",
     ),
     getSignedSum(
       db,
       currentMonth.startAt,
       currentMonth.endAt,
+      businessId,
       "expense",
     ),
     getSignedSum(
       db,
       previousMonth.startAt,
       previousMonth.endAt,
+      businessId,
       "income",
     ),
     getSignedSum(
       db,
       previousMonth.startAt,
       previousMonth.endAt,
+      businessId,
       "expense",
     ),
-    listRecentTransactions(db, 6),
+    listRecentTransactions(db, businessId, 6),
   ]);
 
   const currentIncome = currentIncomeSigned;

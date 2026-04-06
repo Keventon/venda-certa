@@ -1,22 +1,30 @@
+import type { BusinessId } from "@/types/business";
+
 export type TransactionVariant = "income" | "expense";
 
 export type TransactionCategory =
+  | "accessories"
   | "bills"
+  | "cleaning"
   | "counter-sale"
   | "delivery"
   | "event"
   | "food"
   | "ingredients"
   | "logistics"
+  | "medicine"
   | "other"
   | "packaging"
+  | "pet-food"
   | "sales"
+  | "stock"
   | "subscription"
   | "utilities";
 
 export type TransactionRecord = {
   // Persist a signed integer in cents to avoid floating-point drift.
   amountInCents: number;
+  businessId: BusinessId;
   category: TransactionCategory;
   counterparty: string | null;
   createdAt: string;

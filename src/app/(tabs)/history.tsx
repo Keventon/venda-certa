@@ -4,7 +4,9 @@ import { CategorySelector } from "@/components/CategorySelector";
 import { Loading } from "@/components/Loading";
 import { MonthNavigator } from "@/components/MonthNavigator";
 import { TransactionCard } from "@/components/TransactionCard";
+import { getBusinessName } from "@/constants/businesses";
 import { listTransactions } from "@/database";
+import { useBusiness } from "@/providers/BusinessProvider";
 import type {
   HistoryItem,
   HistoryPeriod,
@@ -137,6 +139,7 @@ export default function History() {
   const isFocused = useIsFocused();
   const router = useRouter();
   const { showAlert } = useAlertDialog();
+  const { activeBusiness } = useBusiness();
   const [period, setPeriod] = useState<HistoryPeriod>("7days");
   const [type, setType] = useState<HistoryType>("all");
   const [selectedMonth, setSelectedMonth] = useState(() =>
@@ -157,6 +160,7 @@ export default function History() {
 
       try {
         const result = await listTransactions(db, {
+          businessId: activeBusiness.id,
           monthDate:
             period === "month" ? startOfMonth(selectedMonth).toISOString() : undefined,
           period,
@@ -190,7 +194,7 @@ export default function History() {
     return () => {
       isActive = false;
     };
-  }, [db, isFocused, period, selectedMonth, showAlert, type]);
+  }, [activeBusiness.id, db, isFocused, period, selectedMonth, showAlert, type]);
 
   const incomeTotal = transactions
     .filter((transaction) => transaction.variant === "income")
@@ -252,7 +256,8 @@ export default function History() {
                 Nenhuma movimentacao encontrada
               </Text>
               <Text className="mt-2 font-inter-regular text-sm leading-5 text-text/65">
-                Ajuste os filtros para ver outras entradas e despesas.
+                Ajuste os filtros ou troque de negócio para ver outras
+                movimentações.
               </Text>
             </View>
           </AnimatedEntrance>
@@ -289,6 +294,10 @@ export default function History() {
             <View className="mt-7 rounded-lg bg-white px-5 py-5">
               <Text className="font-inter-semibold text-[10px] uppercase tracking-[1.3px] text-text/75">
                 {formatSummaryTitle(period, selectedMonth)}
+              </Text>
+
+              <Text className="mt-2 font-inter-regular text-xs text-text/55">
+                {getBusinessName(activeBusiness.id)}
               </Text>
 
               <View className="mt-4 flex-row items-end justify-between gap-3">

@@ -7,9 +7,9 @@ import { Loading } from "@/components/Loading";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import {
-  DEFAULT_EXPENSE_CATEGORY,
   getCategoryLabel,
   getCategoryOptionsByVariant,
+  getDefaultCategory,
 } from "@/constants/transactionCategories";
 import {
   deleteTransaction,
@@ -97,7 +97,7 @@ export default function TransactionEditScreen() {
   const [amount, setAmount] = useState("");
   const [transactionDate, setTransactionDate] = useState(new Date());
   const [category, setCategory] = useState<TransactionCategory>(
-    DEFAULT_EXPENSE_CATEGORY,
+    getDefaultCategory("restaurant", "expense"),
   );
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -223,7 +223,10 @@ export default function TransactionEditScreen() {
   }
 
   const copy = VARIANT_COPY[transaction.variant];
-  const categoryOptions = getCategoryOptionsByVariant(transaction.variant);
+  const categoryOptions = getCategoryOptionsByVariant(
+    transaction.businessId,
+    transaction.variant,
+  );
   const currentTransaction = transaction;
   const isAmountValid = hasPositiveCurrencyInput(amount);
   const isFormValid = isAmountValid && title.trim().length > 0;
@@ -259,7 +262,11 @@ export default function TransactionEditScreen() {
         category,
         occurredAt: transactionDate.toISOString(),
         title: title.trim(),
-        typeLabel: getCategoryLabel(currentTransaction.variant, category),
+        typeLabel: getCategoryLabel(
+          currentTransaction.businessId,
+          currentTransaction.variant,
+          category,
+        ),
       });
 
       showAlert({
